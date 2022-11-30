@@ -1,0 +1,56 @@
+name: "Synopsys Polaris Security Testing"
+description: "Run Coverity SAST via the Polaris platform and provide feedback within GitHub pull requests"
+author: "Synopsys Inc"
+inputs:
+  github_token:
+    description: "Your GitHub token"
+    required: true
+  polaris_url:
+    description: "The URL of the Polaris server to be referenced API calls"
+    required: true
+  polaris_access_token:
+    description: "An access token to support API calls"
+    required: true
+  polaris_command:
+    description: 'Command line to pass to the Polaris CLI, will default to "analyze -w"'
+    required: false
+    default: "analyze -w"
+  debug:
+    description: "Enable verbose debugging mode"
+    required: false
+    default: "false"
+  diagnostic:
+    description: "Enable diagonstic build artifacts"
+    required: false
+    default: "false"
+  polaris_proxy_url:
+    description: "The URL of Proxy server"
+    required: true
+  polaris_proxy_username:
+    description: "The username for the proxy"
+    required: true
+  polaris_proxy_password:
+    description: "The password for the proxy"
+    required: true
+  generate_sarif:
+    description: "Generate SARIF output"
+    required: false
+  security_gate_filters:
+    description: "Enable security gate"
+    required: false
+  fail_on_error:
+    description: |
+      Exit code for reviewdog when errors are found [true,false]
+      Default is `false`.
+    default: "false"
+    required: false
+  skip_run:
+    description: "Skip execution of the Polaris CLI command, assume it has been run manually"
+    required: false
+  report_url:
+    description: "URL to report false positives"
+    required: false
+
+runs:
+  using: "node16"
+  main: "dist/index.js"

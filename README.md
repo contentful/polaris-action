@@ -34,6 +34,7 @@ jobs:
 
       - name: Synopsys Polaris
         uses: contentful/polaris-action@master
+        if: github.actor != 'dependabot[bot]' || github.actor != 'dependabot-preview[bot]'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           polaris_url: ${{ secrets.POLARIS_URL }}

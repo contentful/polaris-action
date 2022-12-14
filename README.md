@@ -44,6 +44,7 @@ jobs:
           security_gate_filters: '{ "severity": ["High", "Medium"] }'
           fail_on_error: false
           report_url: "https://github.com/contentful/security-tools-config/issues/new?title=False%20positive%20in%20Polaris"
+    if: !(github.actor == 'dependabot[bot]')
 ```
 
 ## Development

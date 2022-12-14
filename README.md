@@ -34,6 +34,7 @@ jobs:
 
       - name: Synopsys Polaris
         uses: contentful/polaris-action@master
+        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           polaris_url: ${{ secrets.POLARIS_URL }}
@@ -44,7 +45,6 @@ jobs:
           security_gate_filters: '{ "severity": ["High", "Medium"] }'
           fail_on_error: false
           report_url: "https://github.com/contentful/security-tools-config/issues/new?title=False%20positive%20in%20Polaris"
-    if: !(github.actor == 'dependabot[bot]')
 ```
 
 ## Development

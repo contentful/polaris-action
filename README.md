@@ -13,7 +13,7 @@ To start using this action, add the following step to your existing GitHub workf
 Coverity credentials and some reasonable options, which are described in depth in following sections:
 
 ```
-name: polaris
+name: SAST (Static Application Security Testing)
 
 on:
   push:
@@ -22,8 +22,9 @@ on:
     branches: [master, main]
 
 jobs:
-  ubuntu:
-    name: polaris / ubuntu
+  polaris:
+    name: polaris / code-scan
+    continue-on-error: true
     runs-on: ubuntu-latest
 
     steps:
@@ -37,10 +38,10 @@ jobs:
         if: github.actor != 'dependabot[bot]' || github.actor != 'dependabot-preview[bot]'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          polaris_url: ${{ secrets.POLARIS_URL }}
+          polaris_url: ${{ secrets.POLARIS_SERVER_URL }}
           polaris_access_token: ${{ secrets.POLARIS_ACCESS_TOKEN }}
           debug: true
-          polaris_command: analyze -w
+          polaris_command: analyze -w --coverity-ignore-capture-failure
           # Include the security gate filters - what should cause a policy failure
           security_gate_filters: '{ "severity": ["High", "Medium"] }'
           fail_on_error: false

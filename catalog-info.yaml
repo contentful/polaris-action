@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: polaris-action
+  annotations:
+    github.com/project-slug: contentful/polaris-action
+  tags:
+    - sast-enabled
+spec:
+  type: other
+  lifecycle: unknown
+  owner: team-security

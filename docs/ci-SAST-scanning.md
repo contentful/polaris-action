@@ -25,12 +25,15 @@ https://github.com/contentful/polaris-action
 
 The scan results will look like this:
 
+![Screenshot 2022-11-30 at 10 21 41 AM (1)](https://user-images.githubusercontent.com/104775415/211576101-d04856ce-f081-45a0-8f95-2b5d8268975a.jpg)
 
 
 We have added PR decoration capabilities which enables PR comments with findings and annotated code snippet to get much better context of the finding.
 
 Adding SAST scans to your repository
-We have created a sample Github workflow which could be used as a template to add all these SAST scanning tools in your repository. The job flags can be adjusted to meet the needs like blocking pipelines using fail_on_error and severities to report using security_gate_filters for code scan and kics_flags: "--exclude-severities info,low,medium,trace" for IaC scan.
+We have created a sample Github [workflow ](https://github.com/contentful/products/actions/runs/3872283352/jobs/6626234940) which could be used as a template to add all these SAST scanning tools in your repository. The job flags can be adjusted to meet the needs like blocking pipelines using fail_on_error and severities to report using security_gate_filters for code scan and kics_flags: "--exclude-severities info,low,medium,trace" for IaC scan.
+
+![image](https://user-images.githubusercontent.com/104775415/211576468-5e839ab0-6204-4a50-9e6a-b787b5868c47.png)
 
 
 

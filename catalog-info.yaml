@@ -1,9 +1,9 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: polaris-scan
+  name: polaris-action
   annotations:
-    github.com/project-slug: contentful/polaris-scan
+    github.com/project-slug: contentful/polaris-action
   tags:
     - sast-enabled
 spec:

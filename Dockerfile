@@ -21,4 +21,7 @@ RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris
 # Override parameters are necessary to install the coverity local tools
 RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
 
+# copy app code
+COPY dist .
+
 ENTRYPOINT ["/bin/bash"]

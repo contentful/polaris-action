@@ -64,4 +64,5 @@ runs:
         registry: ghcr.io
         options: -v ${{ github.workspace }}:/root
         run: |
-          node dist/index.js
+          ls
+          node index.js

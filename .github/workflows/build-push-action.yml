@@ -6,7 +6,9 @@ on:
   # publish on pushes to the main branch (image tagged as "latest")
   push:
     branches:
-      - "*"
+      - "master"
+
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

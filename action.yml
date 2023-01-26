@@ -40,7 +40,7 @@ inputs:
     required: false
   fail_on_error:
     description: |
-      Exit code for reviewdog when errors are found [true,false]
+      Exit code when errors are found [true,false]
       Default is `false`.
     default: "false"
     required: false
@@ -52,5 +52,24 @@ inputs:
     required: false
 
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: "composite"
+  steps:
+    - name: Retrieve Github Token
+      id: vault
+      uses: hashicorp/vault-action@v2.4.3
+      with:
+        url: ${{ secrets.VAULT_URL }}
+        role: ${{ github.event.repository.name }}-github-action
+        method: jwt
+        path: github-actions
+        exportEnv: true
+        secrets: |
+          secret/team-security/polaris | POLARIS_ACCESS_TOKEN;
+    - name: Run Polaris scan
+      id: polaris_scan
+      uses: addnab/docker-run-action@v3
+      with:
+        image: ghcr.io/contentful/polaris-action:latest
+        options: -v ${{ github.workspace }}:/root
+        run: |
+          node dist/index.js

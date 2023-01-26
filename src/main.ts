@@ -2,7 +2,6 @@
 import { promises as fs } from "fs";
 import os from "os";
 import * as path from "path";
-import * as exec from "@actions/exec";
 import { info } from '@actions/core'
 import {
   coverityCreateNoLongerPresentMessage,
@@ -59,10 +58,8 @@ import {
 } from "./inputs";
 
 import { context } from "@actions/github";
-import * as core from '@actions/core'
 import { Octokit } from "@octokit/rest";
 import { CHECK_NAME } from "./application-constants";
-import * as installer from "./installer";
 
 interface IPolarisNewResult {
   "mergeKey": string,
@@ -119,18 +116,9 @@ async function run(): Promise<void> {
   logger.info('Starting Coverity GitHub Action')
 
   let polarisPolicyCheck;
-  if(FAIL_ON_ERROR === "true"){
-   polarisPolicyCheck = await githubCreateCheck(CHECK_NAME, GITHUB_TOKEN);
+  if (FAIL_ON_ERROR === "true") {
+    polarisPolicyCheck = await githubCreateCheck(CHECK_NAME, GITHUB_TOKEN);
   }
-  const runnerTmpdir = process.env["RUNNER_TEMP"] || os.tmpdir();
-  const tmpdir = await fs.mkdtemp(path.join(runnerTmpdir, "reviewdog-"));
-  const reviewdog = await core.group(
-    "🐶 Installing reviewdog ... https://github.com/reviewdog/reviewdog",
-    async () => {
-      return await installer.installReviewdog("latest", tmpdir);
-    }
-  );
-
   try {
     if (DEBUG === "true") {
       logger.level = 'debug'
@@ -323,8 +311,8 @@ async function run(): Promise<void> {
             issueUnified.events = []
             issueUnified.link = "N/A" // TODO: Fix this up
 
-            if(!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
-            issuesUnified.push(issueUnified)
+            if (!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
+              issuesUnified.push(issueUnified)
 
             break
           }
@@ -404,24 +392,6 @@ async function run(): Promise<void> {
         const issueCommentBody = polarisCreateReviewCommentMessage(issue, REPORT_URL)
 
         const cwd = path.relative(process.env["GITHUB_WORKSPACE"] || process.cwd(), ".");
-        process.env["REVIEWDOG_GITHUB_API_TOKEN"] = core.getInput("github_token");
-        await exec.exec(
-          reviewdog,
-          [
-            "-f=rdjson",
-            `-name=polaris`,
-            `-reporter=github-pr-review`,
-            `-filter-mode=added`,
-            `-fail-on-error=true`,
-            `-level=error`,
-          ],
-          {
-            cwd,
-            input: Buffer.from(reviewCommentBody, "utf-8"),
-            ignoreReturnCode: true,
-          }
-        );
-
         const reviewCommentIndex = actionReviewComments.findIndex(comment => comment.line === issue.line &&
           comment.body.includes(issue.key))
         let existingMatchingReviewComment = undefined

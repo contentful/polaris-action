@@ -54,17 +54,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Retrieve Github Token
-      id: vault
-      uses: hashicorp/vault-action@v2.4.3
-      with:
-        url: ${{ secrets.VAULT_URL }}
-        role: ${{ github.event.repository.name }}-github-action
-        method: jwt
-        path: github-actions
-        exportEnv: true
-        secrets: |
-          secret/team-security/polaris | POLARIS_ACCESS_TOKEN;
     - name: Run Polaris scan
       id: polaris_scan
       uses: addnab/docker-run-action@v3

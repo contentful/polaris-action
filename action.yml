@@ -56,13 +56,4 @@ runs:
   steps:
     - name: Run Polaris scan
       id: polaris_scan
-      uses: addnab/docker-run-action@v3
-      with:
-        image: ghcr.io/contentful/polaris-action:docker-image
-        username: ${{ github.actor }}
-        password: ${{ inputs.GITHUB_TOKEN }}
-        registry: ghcr.io
-        options: -v ${{ github.workspace }}:/root
-        run: |
-          ls
-          node index.js
+      uses: ghcr.io/contentful/polaris-action:docker-image

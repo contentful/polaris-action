@@ -1,5 +1,5 @@
 # nodeJs base image
-FROM ubuntu:latest
+FROM node:slim
 
 ARG POLARIS_SERVER_URL
 ARG POLARIS_ACCESS_TOKEN
@@ -11,12 +11,6 @@ ENV PATH "$INSTALL_DIR/bin:$PATH"
 RUN apt-get update \
     && apt-get install -y curl ca-certificates unzip git jq bash openssl
 
-# RUN apk update \
-#     && apk add curl ca-certificates unzip git jq bash openssl
-
-# RUN apk add --update gcc g++ make python3
-# RUN apk add gcompat libc6-compat
-
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /root
@@ -26,3 +20,5 @@ RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris
 
 # Override parameters are necessary to install the coverity local tools
 RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
+
+ENTRYPOINT ["/bin/bash"]

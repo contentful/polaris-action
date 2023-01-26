@@ -60,7 +60,7 @@ runs:
       with:
         image: polaris-action:docker-image
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ inputs.GITHUB_TOKEN }}
         registry: gcr.io
         options: -v ${{ github.workspace }}:/root
         run: |

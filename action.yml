@@ -61,7 +61,7 @@ runs:
         image: polaris-action:docker-image
         username: ${{ github.actor }}
         password: ${{ inputs.GITHUB_TOKEN }}
-        registry: gcr.io
+        registry: ghcr.io
         options: -v ${{ github.workspace }}:/root
         run: |
           node dist/index.js

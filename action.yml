@@ -69,7 +69,7 @@ runs:
       id: polaris_scan
       uses: addnab/docker-run-action@v3
       with:
-        image: ghcr.io/contentful/polaris-action:latest
+        image: ghcr.io/contentful/polaris-action:docker-image
         options: -v ${{ github.workspace }}:/root
         run: |
           node dist/index.js

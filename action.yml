@@ -58,7 +58,10 @@ runs:
       id: polaris_scan
       uses: addnab/docker-run-action@v3
       with:
-        image: ghcr.io/contentful/polaris-action:docker-image
+        image: polaris-action:docker-image
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: gcr.io
         options: -v ${{ github.workspace }}:/root
         run: |
           node dist/index.js

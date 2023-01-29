@@ -64,6 +64,6 @@ runs:
     INPUT_FAIL_ON_ERROR: ${{ inputs.fail_on_error }}
     INPUT_SKIP_RUN: ${{ inputs.skip_run }}
     INPUT_REPORT_URL: ${{ inputs.report_url }}
-    DOCKER_USERNAME: ${{ github.actor }}
+    DOCKER_USERNAME: ${{ inputs.actor }}
     DOCKER_PASSWORD: ${{ inputs.GITHUB_TOKEN }}
     DOCKER_REGISTRY: ghcr.io

@@ -7,3 +7,8 @@ echo $(ls)
 printenv
 
 node dist/index.js
+
+cd /github/workspace
+echo $(ls)
+cd /root
+echo $(ls)

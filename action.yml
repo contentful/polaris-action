@@ -55,6 +55,7 @@ runs:
   steps:
     - name: 📥 Pull Image
       run: |
+        echo ${{ github.workspace }}
         echo ${{inputs.github_token}} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         docker pull ghcr.io/contentful/polaris-action:docker-image
       shell: bash

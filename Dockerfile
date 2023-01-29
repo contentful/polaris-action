@@ -24,6 +24,6 @@ RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--de
 WORKDIR /root
 
 # copy app code
-COPY . .
+COPY ./dist .
 
 ENTRYPOINT ["/root/entrypoint.sh"]

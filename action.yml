@@ -53,14 +53,17 @@ inputs:
 runs:
   using: docker
   image: docker://ghcr.io/contentful/polaris-action:docker-image
-  args:
-    - ${{ inputs.github_token }}
-    - ${{ inputs.polaris_url }}
-    - ${{ inputs.polaris_access_token }}
-    - ${{ inputs.polaris_command }}
-    - ${{ inputs.debug }}
-    - ${{ inputs.diagnostic }}
-    - ${{ inputs.security_gate_filters }}
-    - ${{ inputs.fail_on_error }}
-    - ${{ inputs.skip_run }}
-    - ${{ inputs.report_url }}
+  env:
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+    INPUT_POLARIS_URL: ${{ inputs.polaris_url }}
+    INPUT_POLARIS_ACCESS_TOKEN: ${{ inputs.polaris_access_token }}
+    INPUT_POLARIS_COMMAND: ${{ inputs.polaris_command }}
+    INPUT_DEBUG: ${{ inputs.debug }}
+    INPUT_DIAGNOSTIC: ${{ inputs.diagnostic }}
+    INPUT_SECURITY_GATE_FILTERS: ${{ inputs.security_gate_filters }}
+    INPUT_FAIL_ON_ERROR: ${{ inputs.fail_on_error }}
+    INPUT_SKIP_RUN: ${{ inputs.skip_run }}
+    INPUT_REPORT_URL: ${{ inputs.report_url }}
+    DOCKER_USERNAME: ${{ github.actor }}
+    DOCKER_PASSWORD: ${{ inputs.GITHUB_TOKEN }}
+    DOCKER_REGISTRY: ghcr.io

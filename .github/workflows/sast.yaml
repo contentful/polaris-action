@@ -1,0 +1,29 @@
+name: SAST (Static Application Security Testing)
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  polaris:
+    name: polaris / code-scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Synopsys Polaris
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          polaris_url: ${{ secrets.POLARIS_URL }}
+          polaris_access_token: ${{ secrets.POLARIS_ACCESS_TOKEN }}
+          debug: true
+          polaris_command: analyze -w
+          security_gate_filters: '{ "severity": ["High", "Medium"] }'
+          report_url: "https://github.com/contentful/security-tools-config/issues/new?title=False%20positive%20in%20Polaris"

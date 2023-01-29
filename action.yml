@@ -23,18 +23,6 @@ inputs:
     description: "Enable diagonstic build artifacts"
     required: false
     default: "false"
-  polaris_proxy_url:
-    description: "The URL of Proxy server"
-    required: true
-  polaris_proxy_username:
-    description: "The username for the proxy"
-    required: true
-  polaris_proxy_password:
-    description: "The password for the proxy"
-    required: true
-  generate_sarif:
-    description: "Generate SARIF output"
-    required: false
   security_gate_filters:
     description: "Enable security gate"
     required: false
@@ -51,9 +39,28 @@ inputs:
     description: "URL to report false positives"
     required: false
 
+# runs:
+#   using: "composite"
+#   steps:
+#     - name: Run Polaris scan
+#       id: polaris_scan
+#       uses: docker://ghcr.io/contentful/polaris-action:docker-image
+#       env:
+#         POLARIS_ACCESS_TOKEN: ${{ secrets.POLARIS_ACCESS_TOKEN }}
+#       with:
+#         entrypoint: node index.js
+
 runs:
-  using: "composite"
-  steps:
-    - name: Run Polaris scan
-      id: polaris_scan
-      uses: ghcr.io/contentful/polaris-action:docker-image
+  using: docker
+  image: docker://ghcr.io/contentful/polaris-action:docker-image
+  args:
+    - ${{ inputs.github_token }}
+    - ${{ inputs.polaris_url }}
+    - ${{ inputs.polaris_access_token }}
+    - ${{ inputs.polaris_command }}
+    - ${{ inputs.debug }}
+    - ${{ inputs.diagnostic }}
+    - ${{ inputs.security_gate_filters }}
+    - ${{ inputs.fail_on_error }}
+    - ${{ inputs.skip_run }}
+    - ${{ inputs.report_url }}

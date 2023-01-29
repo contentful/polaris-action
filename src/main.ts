@@ -221,7 +221,7 @@ async function run(): Promise<void> {
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
 
-      logger.info("Installing Polaris Software Integrity Platform.");
+      // logger.info("Installing Polaris Software Integrity Platform.");
       var polaris_installer = PolarisInstaller.default_installer(logger, polaris_service);
       var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url, polaris_install_path);
       logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);

@@ -6,9 +6,10 @@ export BRANCH=${2}
 echo $(ls)
 printenv
 
-node dist/index.js
+node /root/index.js
 
 cd /github/workspace
 echo $(ls)
+echo "workspace"
 cd /root
 echo $(ls)

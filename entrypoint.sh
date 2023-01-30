@@ -1,6 +1,7 @@
 #!/bin/sh -l
-export GH_TOKEN=${1}
-export BRANCH=${2}
+export PATH="/tmp/bin:$PATH"
 echo $(ls)
+echo $PATH
 printenv
-node dist/index.js
+cd $GITHUB_REPOSITORY
+node /root/dist/index.js

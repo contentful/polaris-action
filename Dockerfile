@@ -13,17 +13,20 @@ RUN apt-get update \
 
 SHELL ["/bin/bash", "-c"]
 
-WORKDIR /tmp
+WORKDIR /root
 
 RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris_cli-linux64-${POLARIS_VERSION}.zip \
     && unzip -j polaris_cli-linux64.zip -d $INSTALL_DIR/bin
 
-# Override parameters are necessary to install the coverity local tools
-RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
-
-WORKDIR /root
-
 # copy app code
-COPY ./dist .
+COPY ./dist ./dist
 
-ENTRYPOINT ["/root/entrypoint.sh"]
+ENV INPUT_POLARIS_ACCESS_TOKEN=$POLARIS_ACCESS_TOKEN
+ENV INPUT_POLARIS_URL=$POLARIS_SERVER_URL
+ENV INPUT_POLARIS_COMMAND='install'
+RUN node ./dist/index.js
+
+COPY entrypoint.sh .
+
+# ENTRYPOINT ["/root/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash"]

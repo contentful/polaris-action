@@ -462,14 +462,6 @@ export class PolarisRunner {
         env["POLARIS_SERVER_URL"] = connection.url;
         env["POLARIS_ACCESS_TOKEN"] = connection.token;
 
-        if (connection.proxy != undefined) {
-            var proxyOpts = urlParser.parse(connection.proxy.proxy_url);
-            if (connection.proxy.proxy_username && connection.proxy.proxy_password) {
-                proxyOpts.auth = connection.proxy.proxy_username + ":" + connection.proxy.proxy_password;
-            }
-            env["HTTPS_PROXY"] = urlParser.format(proxyOpts);
-        }
-
         if ("POLARIS_HOME" in env) {
             this.log.info("A POLARIS_HOME exists, will not attempt to override.")
         } else {
@@ -498,8 +490,6 @@ export class PolarisRunner {
         var synopsysFolder = path.join(cwd, ".synopsys");
         var polarisFolder = path.join(synopsysFolder, "polaris");
         var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
-
-        delete process.env["HTTPS_PROXY"];
 
         return new PolarisRunResult(return_code, scanJsonFile);
     }
@@ -548,7 +538,7 @@ export class PolarisIssueWaiter {
 
         if (issue_counts.length != 0) {
             var total_count = issue_counts.reduce((a: any, b: any) => a + b, 0)
-            this.log.info("Total issues found : " + total_count + "(This will may be filtered for reporting")
+            this.log.info("Total issues found : " + total_count + " (This will may be filtered for reporting")
             return total_count;
         } else {
             this.log.info("Did not find any issue counts.")

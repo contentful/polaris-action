@@ -251,7 +251,7 @@ async function run(): Promise<void> {
 
     if (isIncremental) {
       const resultsGlobber = require('fast-glob');
-
+      console.log('incremental')
       const resultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 
@@ -280,7 +280,7 @@ async function run(): Promise<void> {
             } else {
               issueUnified.localEffect = "(Local effect not available)"
             }
-            issueUnified.checkerName = issue.checkerName
+            issueUnified.checkerName = issue?.checkerName
             issueUnified.path = issue.strippedMainEventFilePathname
             issueUnified.line = issue.mainEventLineNumber
             if (issue.checkerProperties?.impact) {
@@ -319,7 +319,7 @@ async function run(): Promise<void> {
         }
       }
     } else {
-      var scan_json_text = fs.readFile(polaris_run_result.scan_cli_json_path);
+      var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
       var scan_json = JSON.parse(scan_json_text.toString());
 
       const json_path = require('jsonpath');
@@ -471,6 +471,7 @@ async function run(): Promise<void> {
   } catch (unhandledError) {
     logger.debug('Canceling policy check because of an unhandled error.')
     polarisPolicyCheck?.cancelCheck()
+    console.log(unhandledError)
     logger.error(`Failed due to an unhandled error: '${unhandledError}'`)
   }
 }

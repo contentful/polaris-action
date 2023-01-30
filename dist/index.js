@@ -58489,7 +58489,7 @@ class PolarisIssueWaiter {
             }
             if (issue_counts.length != 0) {
                 var total_count = issue_counts.reduce((a, b) => a + b, 0);
-                this.log.info("Total issues found : " + total_count + "(This will may be filtered for reporting");
+                this.log.info("Total issues found : " + total_count + " (This will may be filtered for reporting");
                 return total_count;
             }
             else {
@@ -58895,6 +58895,7 @@ function run() {
             let issuesUnified = undefined;
             if (isIncremental) {
                 const resultsGlobber = __nccwpck_require__(3664);
+                console.log('incremental');
                 const resultsJson = yield resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
                 utils_1.logger.debug(`Incremental results in ${resultsJson[0]}`);
                 const newResultsJson = yield resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
@@ -58922,7 +58923,7 @@ function run() {
                             else {
                                 issueUnified.localEffect = "(Local effect not available)";
                             }
-                            issueUnified.checkerName = issue.checkerName;
+                            issueUnified.checkerName = issue === null || issue === void 0 ? void 0 : issue.checkerName;
                             issueUnified.path = issue.strippedMainEventFilePathname;
                             issueUnified.line = issue.mainEventLineNumber;
                             if ((_e = issue.checkerProperties) === null || _e === void 0 ? void 0 : _e.impact) {
@@ -58962,7 +58963,7 @@ function run() {
                 }
             }
             else {
-                var scan_json_text = fs_1.promises.readFile(polaris_run_result.scan_cli_json_path);
+                var scan_json_text = yield fs_1.promises.readFile(polaris_run_result.scan_cli_json_path);
                 var scan_json = JSON.parse(scan_json_text.toString());
                 const json_path = __nccwpck_require__(4378);
                 var project_id = json_path.query(scan_json, "$.projectInfo.projectId");
@@ -59092,6 +59093,7 @@ function run() {
         catch (unhandledError) {
             utils_1.logger.debug('Canceling policy check because of an unhandled error.');
             polarisPolicyCheck === null || polarisPolicyCheck === void 0 ? void 0 : polarisPolicyCheck.cancelCheck();
+            console.log(unhandledError);
             utils_1.logger.error(`Failed due to an unhandled error: '${unhandledError}'`);
         }
     });

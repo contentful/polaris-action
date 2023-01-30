@@ -28,5 +28,5 @@ RUN node ./dist/index.js
 
 COPY entrypoint.sh .
 
-# ENTRYPOINT ["/root/entrypoint.sh"]
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/root/entrypoint.sh"]
+# ENTRYPOINT ["/bin/bash"]

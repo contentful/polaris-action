@@ -18,7 +18,7 @@ jobs:
         uses: ./
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          polaris_url: ${{ secrets.POLARIS_URL }}
+          polaris_url: ${{ secrets.POLARIS_SERVER_URL }}
           polaris_access_token: ${{ secrets.POLARIS_ACCESS_TOKEN }}
           debug: true
           polaris_command: analyze -w

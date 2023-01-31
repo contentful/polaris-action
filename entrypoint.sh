@@ -6,6 +6,6 @@ echo $PATH
 printenv
 cd $GITHUB_WORKSPACE
 echo $(ls)
-# git config --global --add safe.directory /root/$GITHUB_REPOSITORY
+git config --global --add safe.directory $GITHUB_WORKSPACE
 git status
 node /root/dist/index.js

@@ -60841,7 +60841,7 @@ class PolarisInstaller {
         this.platform_support = platform_support;
         this.polaris_service = polaris_service;
     }
-    install_or_locate_polaris(polaris_url, polaris_install_path) {
+    install_or_locate_polaris(polaris_url) {
         return __awaiter(this, void 0, void 0, function* () {
             var polaris_exe = "polaris";
             var polaris_home = "polaris";
@@ -61146,14 +61146,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.githubGetChangesForPR = void 0;
 // import fs from 'fs'
 const fs_1 = __nccwpck_require__(7147);
-const os_1 = __importDefault(__nccwpck_require__(2037));
 const path = __importStar(__nccwpck_require__(1017));
 const core_1 = __nccwpck_require__(2186);
 const utils_1 = __nccwpck_require__(1314);
@@ -61236,13 +61232,6 @@ function run() {
             (0, utils_1.githubIsPullRequest)() ? isIncremental = true : false;
             const task_input = new classes_1.PolarisInputReader().getPolarisInputs(inputs_1.POLARIS_URL, inputs_1.POLARIS_ACCESS_TOKEN, inputs_1.POLARIS_COMMAND, !isIncremental, isIncremental, false);
             const connection = task_input.polaris_connection;
-            var polaris_install_path;
-            polaris_install_path = os_1.default.tmpdir();
-            if (!polaris_install_path) {
-                utils_1.logger.warn("Agent did not have a tool directory, polaris will be installed to the current working directory.");
-                polaris_install_path = process.cwd();
-            }
-            utils_1.logger.info(`Polaris Software Integrity Platform will be installed to the following path: ` + polaris_install_path);
             utils_1.logger.info("Connecting to Polaris Software Integrity Platform server.");
             const polaris_service = new classes_1.PolarisService(utils_1.logger, connection);
             yield polaris_service.authenticate();
@@ -61303,10 +61292,11 @@ function run() {
                 }
                 // logger.info("Installing Polaris Software Integrity Platform.");
                 var polaris_installer = classes_1.PolarisInstaller.default_installer(utils_1.logger, polaris_service);
-                var polaris_install = yield polaris_installer.install_or_locate_polaris(connection.url, polaris_install_path);
+                var polaris_install = yield polaris_installer.install_or_locate_polaris(connection.url);
                 utils_1.logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
                 utils_1.logger.info("Running Polaris Software Integrity Platform.");
                 var polaris_runner = new classes_1.PolarisRunner(utils_1.logger);
+                yield polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
                 polaris_run_result = yield polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
                 if (task_input.should_wait_for_issues) {
                     utils_1.logger.info("Checking for issues.");

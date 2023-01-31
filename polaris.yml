@@ -1,0 +1,30 @@
+version: "1"
+project:
+  name: ${scm.git.repo}
+  branch: ${scm.git.branch}
+  revision:
+    name: ${scm.git.commit}
+    date: ${scm.git.commit.date}
+capture:
+  fileSystem:
+    javascript:
+      extensions: [js, ts]
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: test|node_modules|bower_components|vendor|package-lock.json|yarn.lock
+    python:
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: test
+    ruby:
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: test|spec
+analyze:
+  mode: central
+  coverity:
+    cov-analyze:
+      ["--disable-default", "--enable-audit-mode", "--webapp-security"]
+install:
+  coverity:
+    version: default

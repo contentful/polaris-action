@@ -10050,241 +10050,6 @@ module.exports = function (/*Buffer|null*/ inBuffer, /** object */ options) {
 
 /***/ }),
 
-/***/ 9690:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-const events_1 = __nccwpck_require__(8614);
-const debug_1 = __importDefault(__nccwpck_require__(8237));
-const promisify_1 = __importDefault(__nccwpck_require__(6570));
-const debug = debug_1.default('agent-base');
-function isAgent(v) {
-    return Boolean(v) && typeof v.addRequest === 'function';
-}
-function isSecureEndpoint() {
-    const { stack } = new Error();
-    if (typeof stack !== 'string')
-        return false;
-    return stack.split('\n').some(l => l.indexOf('(https.js:') !== -1 || l.indexOf('node:https:') !== -1);
-}
-function createAgent(callback, opts) {
-    return new createAgent.Agent(callback, opts);
-}
-(function (createAgent) {
-    /**
-     * Base `http.Agent` implementation.
-     * No pooling/keep-alive is implemented by default.
-     *
-     * @param {Function} callback
-     * @api public
-     */
-    class Agent extends events_1.EventEmitter {
-        constructor(callback, _opts) {
-            super();
-            let opts = _opts;
-            if (typeof callback === 'function') {
-                this.callback = callback;
-            }
-            else if (callback) {
-                opts = callback;
-            }
-            // Timeout for the socket to be returned from the callback
-            this.timeout = null;
-            if (opts && typeof opts.timeout === 'number') {
-                this.timeout = opts.timeout;
-            }
-            // These aren't actually used by `agent-base`, but are required
-            // for the TypeScript definition files in `@types/node` :/
-            this.maxFreeSockets = 1;
-            this.maxSockets = 1;
-            this.maxTotalSockets = Infinity;
-            this.sockets = {};
-            this.freeSockets = {};
-            this.requests = {};
-            this.options = {};
-        }
-        get defaultPort() {
-            if (typeof this.explicitDefaultPort === 'number') {
-                return this.explicitDefaultPort;
-            }
-            return isSecureEndpoint() ? 443 : 80;
-        }
-        set defaultPort(v) {
-            this.explicitDefaultPort = v;
-        }
-        get protocol() {
-            if (typeof this.explicitProtocol === 'string') {
-                return this.explicitProtocol;
-            }
-            return isSecureEndpoint() ? 'https:' : 'http:';
-        }
-        set protocol(v) {
-            this.explicitProtocol = v;
-        }
-        callback(req, opts, fn) {
-            throw new Error('"agent-base" has no default implementation, you must subclass and override `callback()`');
-        }
-        /**
-         * Called by node-core's "_http_client.js" module when creating
-         * a new HTTP request with this Agent instance.
-         *
-         * @api public
-         */
-        addRequest(req, _opts) {
-            const opts = Object.assign({}, _opts);
-            if (typeof opts.secureEndpoint !== 'boolean') {
-                opts.secureEndpoint = isSecureEndpoint();
-            }
-            if (opts.host == null) {
-                opts.host = 'localhost';
-            }
-            if (opts.port == null) {
-                opts.port = opts.secureEndpoint ? 443 : 80;
-            }
-            if (opts.protocol == null) {
-                opts.protocol = opts.secureEndpoint ? 'https:' : 'http:';
-            }
-            if (opts.host && opts.path) {
-                // If both a `host` and `path` are specified then it's most
-                // likely the result of a `url.parse()` call... we need to
-                // remove the `path` portion so that `net.connect()` doesn't
-                // attempt to open that as a unix socket file.
-                delete opts.path;
-            }
-            delete opts.agent;
-            delete opts.hostname;
-            delete opts._defaultAgent;
-            delete opts.defaultPort;
-            delete opts.createConnection;
-            // Hint to use "Connection: close"
-            // XXX: non-documented `http` module API :(
-            req._last = true;
-            req.shouldKeepAlive = false;
-            let timedOut = false;
-            let timeoutId = null;
-            const timeoutMs = opts.timeout || this.timeout;
-            const onerror = (err) => {
-                if (req._hadError)
-                    return;
-                req.emit('error', err);
-                // For Safety. Some additional errors might fire later on
-                // and we need to make sure we don't double-fire the error event.
-                req._hadError = true;
-            };
-            const ontimeout = () => {
-                timeoutId = null;
-                timedOut = true;
-                const err = new Error(`A "socket" was not created for HTTP request before ${timeoutMs}ms`);
-                err.code = 'ETIMEOUT';
-                onerror(err);
-            };
-            const callbackError = (err) => {
-                if (timedOut)
-                    return;
-                if (timeoutId !== null) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-                onerror(err);
-            };
-            const onsocket = (socket) => {
-                if (timedOut)
-                    return;
-                if (timeoutId != null) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-                if (isAgent(socket)) {
-                    // `socket` is actually an `http.Agent` instance, so
-                    // relinquish responsibility for this `req` to the Agent
-                    // from here on
-                    debug('Callback returned another Agent instance %o', socket.constructor.name);
-                    socket.addRequest(req, opts);
-                    return;
-                }
-                if (socket) {
-                    socket.once('free', () => {
-                        this.freeSocket(socket, opts);
-                    });
-                    req.onSocket(socket);
-                    return;
-                }
-                const err = new Error(`no Duplex stream was returned to agent-base for \`${req.method} ${req.path}\``);
-                onerror(err);
-            };
-            if (typeof this.callback !== 'function') {
-                onerror(new Error('`callback` is not defined'));
-                return;
-            }
-            if (!this.promisifiedCallback) {
-                if (this.callback.length >= 3) {
-                    debug('Converting legacy callback function to promise');
-                    this.promisifiedCallback = promisify_1.default(this.callback);
-                }
-                else {
-                    this.promisifiedCallback = this.callback;
-                }
-            }
-            if (typeof timeoutMs === 'number' && timeoutMs > 0) {
-                timeoutId = setTimeout(ontimeout, timeoutMs);
-            }
-            if ('port' in opts && typeof opts.port !== 'number') {
-                opts.port = Number(opts.port);
-            }
-            try {
-                debug('Resolving socket for %o request: %o', opts.protocol, `${req.method} ${req.path}`);
-                Promise.resolve(this.promisifiedCallback(req, opts)).then(onsocket, callbackError);
-            }
-            catch (err) {
-                Promise.reject(err).catch(callbackError);
-            }
-        }
-        freeSocket(socket, opts) {
-            debug('Freeing socket %o %o', socket.constructor.name, opts);
-            socket.destroy();
-        }
-        destroy() {
-            debug('Destroying agent %o', this.constructor.name);
-        }
-    }
-    createAgent.Agent = Agent;
-    // So that `instanceof` works correctly
-    createAgent.prototype = createAgent.Agent.prototype;
-})(createAgent || (createAgent = {}));
-module.exports = createAgent;
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 6570:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-function promisify(fn) {
-    return function (req, opts) {
-        return new Promise((resolve, reject) => {
-            fn.call(this, req, opts, (err, rtn) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(rtn);
-                }
-            });
-        });
-    };
-}
-exports.default = promisify;
-//# sourceMappingURL=promisify.js.map
-
-/***/ }),
-
 /***/ 991:
 /***/ ((module, exports, __nccwpck_require__) => {
 
@@ -24277,287 +24042,6 @@ module.exports = (flag, argv = process.argv) => {
 	return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
 };
 
-
-/***/ }),
-
-/***/ 5098:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const net_1 = __importDefault(__nccwpck_require__(1631));
-const tls_1 = __importDefault(__nccwpck_require__(4016));
-const url_1 = __importDefault(__nccwpck_require__(8835));
-const assert_1 = __importDefault(__nccwpck_require__(2357));
-const debug_1 = __importDefault(__nccwpck_require__(8237));
-const agent_base_1 = __nccwpck_require__(9690);
-const parse_proxy_response_1 = __importDefault(__nccwpck_require__(595));
-const debug = debug_1.default('https-proxy-agent:agent');
-/**
- * The `HttpsProxyAgent` implements an HTTP Agent subclass that connects to
- * the specified "HTTP(s) proxy server" in order to proxy HTTPS requests.
- *
- * Outgoing HTTP requests are first tunneled through the proxy server using the
- * `CONNECT` HTTP request method to establish a connection to the proxy server,
- * and then the proxy server connects to the destination target and issues the
- * HTTP request from the proxy server.
- *
- * `https:` requests have their socket connection upgraded to TLS once
- * the connection to the proxy server has been established.
- *
- * @api public
- */
-class HttpsProxyAgent extends agent_base_1.Agent {
-    constructor(_opts) {
-        let opts;
-        if (typeof _opts === 'string') {
-            opts = url_1.default.parse(_opts);
-        }
-        else {
-            opts = _opts;
-        }
-        if (!opts) {
-            throw new Error('an HTTP(S) proxy server `host` and `port` must be specified!');
-        }
-        debug('creating new HttpsProxyAgent instance: %o', opts);
-        super(opts);
-        const proxy = Object.assign({}, opts);
-        // If `true`, then connect to the proxy server over TLS.
-        // Defaults to `false`.
-        this.secureProxy = opts.secureProxy || isHTTPS(proxy.protocol);
-        // Prefer `hostname` over `host`, and set the `port` if needed.
-        proxy.host = proxy.hostname || proxy.host;
-        if (typeof proxy.port === 'string') {
-            proxy.port = parseInt(proxy.port, 10);
-        }
-        if (!proxy.port && proxy.host) {
-            proxy.port = this.secureProxy ? 443 : 80;
-        }
-        // ALPN is supported by Node.js >= v5.
-        // attempt to negotiate http/1.1 for proxy servers that support http/2
-        if (this.secureProxy && !('ALPNProtocols' in proxy)) {
-            proxy.ALPNProtocols = ['http 1.1'];
-        }
-        if (proxy.host && proxy.path) {
-            // If both a `host` and `path` are specified then it's most likely
-            // the result of a `url.parse()` call... we need to remove the
-            // `path` portion so that `net.connect()` doesn't attempt to open
-            // that as a Unix socket file.
-            delete proxy.path;
-            delete proxy.pathname;
-        }
-        this.proxy = proxy;
-    }
-    /**
-     * Called when the node-core HTTP client library is creating a
-     * new HTTP request.
-     *
-     * @api protected
-     */
-    callback(req, opts) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const { proxy, secureProxy } = this;
-            // Create a socket connection to the proxy server.
-            let socket;
-            if (secureProxy) {
-                debug('Creating `tls.Socket`: %o', proxy);
-                socket = tls_1.default.connect(proxy);
-            }
-            else {
-                debug('Creating `net.Socket`: %o', proxy);
-                socket = net_1.default.connect(proxy);
-            }
-            const headers = Object.assign({}, proxy.headers);
-            const hostname = `${opts.host}:${opts.port}`;
-            let payload = `CONNECT ${hostname} HTTP/1.1\r\n`;
-            // Inject the `Proxy-Authorization` header if necessary.
-            if (proxy.auth) {
-                headers['Proxy-Authorization'] = `Basic ${Buffer.from(proxy.auth).toString('base64')}`;
-            }
-            // The `Host` header should only include the port
-            // number when it is not the default port.
-            let { host, port, secureEndpoint } = opts;
-            if (!isDefaultPort(port, secureEndpoint)) {
-                host += `:${port}`;
-            }
-            headers.Host = host;
-            headers.Connection = 'close';
-            for (const name of Object.keys(headers)) {
-                payload += `${name}: ${headers[name]}\r\n`;
-            }
-            const proxyResponsePromise = parse_proxy_response_1.default(socket);
-            socket.write(`${payload}\r\n`);
-            const { statusCode, buffered } = yield proxyResponsePromise;
-            if (statusCode === 200) {
-                req.once('socket', resume);
-                if (opts.secureEndpoint) {
-                    const servername = opts.servername || opts.host;
-                    if (!servername) {
-                        throw new Error('Could not determine "servername"');
-                    }
-                    // The proxy is connecting to a TLS server, so upgrade
-                    // this socket connection to a TLS connection.
-                    debug('Upgrading socket connection to TLS');
-                    return tls_1.default.connect(Object.assign(Object.assign({}, omit(opts, 'host', 'hostname', 'path', 'port')), { socket,
-                        servername }));
-                }
-                return socket;
-            }
-            // Some other status code that's not 200... need to re-play the HTTP
-            // header "data" events onto the socket once the HTTP machinery is
-            // attached so that the node core `http` can parse and handle the
-            // error status code.
-            // Close the original socket, and a new "fake" socket is returned
-            // instead, so that the proxy doesn't get the HTTP request
-            // written to it (which may contain `Authorization` headers or other
-            // sensitive data).
-            //
-            // See: https://hackerone.com/reports/541502
-            socket.destroy();
-            const fakeSocket = new net_1.default.Socket();
-            fakeSocket.readable = true;
-            // Need to wait for the "socket" event to re-play the "data" events.
-            req.once('socket', (s) => {
-                debug('replaying proxy buffer for failed request');
-                assert_1.default(s.listenerCount('data') > 0);
-                // Replay the "buffered" Buffer onto the fake `socket`, since at
-                // this point the HTTP module machinery has been hooked up for
-                // the user.
-                s.push(buffered);
-                s.push(null);
-            });
-            return fakeSocket;
-        });
-    }
-}
-exports.default = HttpsProxyAgent;
-function resume(socket) {
-    socket.resume();
-}
-function isDefaultPort(port, secure) {
-    return Boolean((!secure && port === 80) || (secure && port === 443));
-}
-function isHTTPS(protocol) {
-    return typeof protocol === 'string' ? /^https:?$/i.test(protocol) : false;
-}
-function omit(obj, ...keys) {
-    const ret = {};
-    let key;
-    for (key in obj) {
-        if (!keys.includes(key)) {
-            ret[key] = obj[key];
-        }
-    }
-    return ret;
-}
-//# sourceMappingURL=agent.js.map
-
-/***/ }),
-
-/***/ 7219:
-/***/ (function(module, __unused_webpack_exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-const agent_1 = __importDefault(__nccwpck_require__(5098));
-function createHttpsProxyAgent(opts) {
-    return new agent_1.default(opts);
-}
-(function (createHttpsProxyAgent) {
-    createHttpsProxyAgent.HttpsProxyAgent = agent_1.default;
-    createHttpsProxyAgent.prototype = agent_1.default.prototype;
-})(createHttpsProxyAgent || (createHttpsProxyAgent = {}));
-module.exports = createHttpsProxyAgent;
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 595:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const debug_1 = __importDefault(__nccwpck_require__(8237));
-const debug = debug_1.default('https-proxy-agent:parse-proxy-response');
-function parseProxyResponse(socket) {
-    return new Promise((resolve, reject) => {
-        // we need to buffer any HTTP traffic that happens with the proxy before we get
-        // the CONNECT response, so that if the response is anything other than an "200"
-        // response code, then we can re-play the "data" events on the socket once the
-        // HTTP parser is hooked up...
-        let buffersLength = 0;
-        const buffers = [];
-        function read() {
-            const b = socket.read();
-            if (b)
-                ondata(b);
-            else
-                socket.once('readable', read);
-        }
-        function cleanup() {
-            socket.removeListener('end', onend);
-            socket.removeListener('error', onerror);
-            socket.removeListener('close', onclose);
-            socket.removeListener('readable', read);
-        }
-        function onclose(err) {
-            debug('onclose had error %o', err);
-        }
-        function onend() {
-            debug('onend');
-        }
-        function onerror(err) {
-            cleanup();
-            debug('onerror %o', err);
-            reject(err);
-        }
-        function ondata(b) {
-            buffers.push(b);
-            buffersLength += b.length;
-            const buffered = Buffer.concat(buffers, buffersLength);
-            const endOfHeaders = buffered.indexOf('\r\n\r\n');
-            if (endOfHeaders === -1) {
-                // keep buffering
-                debug('have not received end of HTTP headers yet...');
-                read();
-                return;
-            }
-            const firstLine = buffered.toString('ascii', 0, buffered.indexOf('\r\n'));
-            const statusCode = +firstLine.split(' ')[1];
-            debug('got proxy server response: %o', firstLine);
-            resolve({
-                statusCode,
-                buffered
-            });
-        }
-        socket.on('error', onerror);
-        socket.on('close', onclose);
-        socket.on('end', onend);
-        read();
-    });
-}
-exports.default = parseProxyResponse;
-//# sourceMappingURL=parse-proxy-response.js.map
 
 /***/ }),
 
@@ -57996,8 +57480,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PolarisJobService = exports.PolarisIssueWaiter = exports.PolarisRunResult = exports.PolarisRunner = exports.PolarisInstaller = exports.PolarisInstall = exports.PolarisPlatformSupport = exports.ChangeSetReplacement = exports.ChangeSetFileWriter = exports.ChangeSetEnvironment = exports.PolarisService = exports.PolarisInputReader = exports.PolarisProxyInfo = exports.PolarisConnection = void 0;
-const HttpsProxyAgent = __nccwpck_require__(7219);
+exports.PolarisJobService = exports.PolarisIssueWaiter = exports.PolarisRunResult = exports.PolarisRunner = exports.PolarisInstaller = exports.PolarisInstall = exports.PolarisPlatformSupport = exports.ChangeSetReplacement = exports.ChangeSetFileWriter = exports.ChangeSetEnvironment = exports.PolarisService = exports.PolarisInputReader = exports.PolarisConnection = void 0;
 const url = __nccwpck_require__(8835);
 const Axios = __nccwpck_require__(1441);
 const moment = __nccwpck_require__(9623);
@@ -58013,31 +57496,14 @@ const zipper = __nccwpck_require__(6761);
 const urlParser = __nccwpck_require__(8835);
 const exec_1 = __nccwpck_require__(1514);
 class PolarisConnection {
-    constructor(url, token, proxy) {
+    constructor(url, token) {
         this.url = url;
         this.token = token;
-        this.proxy = proxy;
     }
 }
 exports.PolarisConnection = PolarisConnection;
-class PolarisProxyInfo {
-    constructor(proxy_url, proxy_username, proxy_password) {
-        this.proxy_url = proxy_url;
-        this.proxy_username = proxy_username;
-        this.proxy_password = proxy_password;
-    }
-}
-exports.PolarisProxyInfo = PolarisProxyInfo;
 class PolarisInputReader {
-    getPolarisInputs(polaris_url, polaris_token, proxy_url, proxy_username, proxy_password, build_command, should_wait_for_issues, should_changeset, should_changeset_fail) {
-        var polaris_proxy_info = undefined;
-        if (proxy_url && proxy_url.length > 0 && proxy_username && proxy_username.length > 0 &&
-            proxy_password && proxy_password.length > 0) {
-            polaris_proxy_info = new PolarisProxyInfo(proxy_url, proxy_username, proxy_password);
-        }
-        else {
-            polaris_proxy_info = undefined;
-        }
+    getPolarisInputs(polaris_url, polaris_token, build_command, should_wait_for_issues, should_changeset, should_changeset_fail) {
         if (polaris_url.endsWith("/") || polaris_url.endsWith("\\")) {
             polaris_url = polaris_url.slice(0, -1);
         }
@@ -58045,7 +57511,7 @@ class PolarisInputReader {
             should_changeset = true;
         }
         return {
-            polaris_connection: new PolarisConnection(polaris_url, polaris_token, polaris_proxy_info),
+            polaris_connection: new PolarisConnection(polaris_url, polaris_token),
             build_command: build_command,
             should_wait_for_issues: should_wait_for_issues,
             should_empty_changeset_fail: should_changeset_fail,
@@ -58066,28 +57532,11 @@ class PolarisService {
         this.bearer_token = null;
         this.headers = null;
         this.log = log;
-        if (connection.proxy != undefined) {
-            log.info(`Using Proxy URL: ${connection.proxy.proxy_url}`);
-            var proxyOpts = url.parse(connection.proxy.proxy_url);
-            var proxyConfig = {
-                host: proxyOpts.hostname,
-                port: proxyOpts.port
-            };
-            if (connection.proxy.proxy_username && connection.proxy.proxy_password) {
-                log.info("Using configured proxy credentials.");
-                proxyConfig.auth = connection.proxy.proxy_username + ":" + connection.proxy.proxy_password;
-            }
-            const httpsAgent = new HttpsProxyAgent(proxyConfig);
-            this.axios = Axios.create({ httpsAgent });
-        }
-        else {
-            this.axios = Axios.create();
-        }
+        this.axios = Axios.create();
     }
     authenticate() {
         return __awaiter(this, void 0, void 0, function* () {
             this.log.info("Authenticating with Polaris Software Integrity Platform.");
-            debug.enable('https-proxy-agent');
             this.bearer_token = yield this.fetch_bearer_token();
             debug.disable();
             this.headers = {
@@ -58351,54 +57800,6 @@ class PolarisInstaller {
     }
     install_or_locate_polaris(polaris_url, polaris_install_path) {
         return __awaiter(this, void 0, void 0, function* () {
-            // var polaris_cli_name = "polaris"; // used to be "swip"
-            // var polaris_cli_location = path.resolve(polaris_install_path, "polaris");
-            // // var version_file = path.join(polaris_cli_location, "version.txt");
-            // var relative_cli_url = this.platform_support.platform_specific_cli_zip_url_fragment(polaris_cli_name);
-            // var cli_url = polaris_url + relative_cli_url;
-            // // var synopsys_path = path.resolve(polaris_install_path, ".synopsys");
-            // var polaris_home = path.resolve("polaris");
-            // this.log.info(`Using polaris cli location: ` + polaris_cli_location)
-            // this.log.info(`Using polaris cli url: ` + cli_url)
-            // this.log.debug("Checking for version file: " + version_file)
-            // var download_cli = false;
-            // var available_version_date = await this.polaris_service.fetch_cli_modified_date(cli_url);
-            // if (fs.existsSync(version_file)) {
-            //     this.log.debug("Version file exists.")
-            //     var current_version_date = moment(fs.readFileSync(version_file, { encoding: 'utf8' }));
-            //     this.log.debug("Current version: " + current_version_date.format())
-            //     this.log.debug("Available version: " + available_version_date.format())
-            //     if (current_version_date.isBefore(available_version_date)) {
-            //         this.log.info("Downloading Polaris CLI because a newer version is available.")
-            //         download_cli = true;
-            //     } else {
-            //         this.log.info("Existing Polaris CLI will be used.")
-            //     }
-            // } else {
-            //     this.log.info("Downloading Polaris CLI because a version file did not exist.")
-            //     download_cli = true;
-            // }
-            // if (download_cli) {
-            //     if (fs.existsSync(polaris_cli_location)) {
-            //         this.log.info(`Cleaning up the Polaris installation directory: ${polaris_cli_location}`);
-            //         this.log.info("Please do not place anything in this folder, it is under extension control.");
-            //         fse.removeSync(polaris_cli_location);
-            //     }
-            //     this.log.info("Starting download.")
-            //     const polaris_zip = path.join(polaris_install_path, "polaris.zip");
-            //     await this.polaris_service.download_cli(cli_url, polaris_zip);
-            //     this.log.info("Starting extraction.")
-            //     var zip = new zipper(polaris_zip);
-            //     await zip.extractAllTo(polaris_cli_location, /*overwrite*/ true);
-            //     this.log.info("Download and extraction finished.")
-            //     fse.ensureFileSync(version_file);
-            //     fs.writeFileSync(version_file, available_version_date.format(), 'utf8');
-            //     this.log.info(`Wrote version file: ${version_file}`)
-            // }
-            // this.log.info("Looking for Polaris executable.")
-            // var polaris_exe = await this.executable_finder.find_executable(polaris_cli_location);
-            // this.log.info("Found executable: " + polaris_exe)
-            // info: Found executable: /root/bin/polaris/polaris_cli-linux64-2022.12.0/bin/polaris
             var polaris_exe = "polaris";
             var polaris_home = "polaris";
             return new PolarisInstall(polaris_exe, polaris_home);
@@ -58415,13 +57816,6 @@ class PolarisRunner {
             var env = process.env;
             env["POLARIS_SERVER_URL"] = connection.url;
             env["POLARIS_ACCESS_TOKEN"] = connection.token;
-            if (connection.proxy != undefined) {
-                var proxyOpts = urlParser.parse(connection.proxy.proxy_url);
-                if (connection.proxy.proxy_username && connection.proxy.proxy_password) {
-                    proxyOpts.auth = connection.proxy.proxy_username + ":" + connection.proxy.proxy_password;
-                }
-                env["HTTPS_PROXY"] = urlParser.format(proxyOpts);
-            }
             if ("POLARIS_HOME" in env) {
                 this.log.info("A POLARIS_HOME exists, will not attempt to override.");
             }
@@ -58447,7 +57841,6 @@ class PolarisRunner {
             var synopsysFolder = path.join(cwd, ".synopsys");
             var polarisFolder = path.join(synopsysFolder, "polaris");
             var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
-            delete process.env["HTTPS_PROXY"];
             return new PolarisRunResult(return_code, scanJsonFile);
         });
     }
@@ -58584,7 +57977,7 @@ function sleep(ms) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.REPORT_URL = exports.SKIP_RUN = exports.FAIL_ON_ERROR = exports.SECURITY_GATE_FILTERS = exports.GENERATE_SARIF = exports.POLARIS_PROXY_PASSWORD = exports.POLARIS_PROXY_USERNAME = exports.POLARIS_PROXY_URL = exports.DIAGNOSTIC = exports.DEBUG = exports.POLARIS_COMMAND = exports.POLARIS_ACCESS_TOKEN = exports.POLARIS_URL = exports.GITHUB_TOKEN = void 0;
+exports.REPORT_URL = exports.SKIP_RUN = exports.FAIL_ON_ERROR = exports.SECURITY_GATE_FILTERS = exports.DIAGNOSTIC = exports.DEBUG = exports.POLARIS_COMMAND = exports.POLARIS_ACCESS_TOKEN = exports.POLARIS_URL = exports.GITHUB_TOKEN = void 0;
 const core_1 = __nccwpck_require__(2186);
 exports.GITHUB_TOKEN = (0, core_1.getInput)('github_token');
 exports.POLARIS_URL = (0, core_1.getInput)('polaris_url');
@@ -58592,10 +57985,6 @@ exports.POLARIS_ACCESS_TOKEN = (0, core_1.getInput)('polaris_access_token');
 exports.POLARIS_COMMAND = (0, core_1.getInput)('polaris_command');
 exports.DEBUG = (0, core_1.getInput)('debug');
 exports.DIAGNOSTIC = (0, core_1.getInput)('diagnostic');
-exports.POLARIS_PROXY_URL = (0, core_1.getInput)('polaris_proxy_url');
-exports.POLARIS_PROXY_USERNAME = (0, core_1.getInput)('polaris_proxy_username');
-exports.POLARIS_PROXY_PASSWORD = (0, core_1.getInput)('polaris_proxy_password');
-exports.GENERATE_SARIF = (0, core_1.getInput)('generate_sarif');
 exports.SECURITY_GATE_FILTERS = (0, core_1.getInput)('security_gate_filters');
 exports.FAIL_ON_ERROR = (0, core_1.getInput)('fail_on_error');
 exports.SKIP_RUN = (0, core_1.getInput)('skip_run');
@@ -58802,7 +58191,7 @@ function run() {
             // let isIncremental = POLARIS_COMMAND.includes("--incremental")
             let isIncremental = false;
             (0, utils_1.githubIsPullRequest)() ? isIncremental = true : false;
-            const task_input = new classes_1.PolarisInputReader().getPolarisInputs(inputs_1.POLARIS_URL, inputs_1.POLARIS_ACCESS_TOKEN, inputs_1.POLARIS_PROXY_URL ? inputs_1.POLARIS_PROXY_URL : "", inputs_1.POLARIS_PROXY_USERNAME ? inputs_1.POLARIS_PROXY_USERNAME : "", inputs_1.POLARIS_PROXY_PASSWORD ? inputs_1.POLARIS_PROXY_PASSWORD : "", inputs_1.POLARIS_COMMAND, !isIncremental, isIncremental, false);
+            const task_input = new classes_1.PolarisInputReader().getPolarisInputs(inputs_1.POLARIS_URL, inputs_1.POLARIS_ACCESS_TOKEN, inputs_1.POLARIS_COMMAND, !isIncremental, isIncremental, false);
             const connection = task_input.polaris_connection;
             var polaris_install_path;
             polaris_install_path = os_1.default.tmpdir();
@@ -59005,7 +58394,6 @@ function run() {
                 }
             }
             utils_1.logger.info("Executed Polaris Software Integrity Platform: " + polaris_run_result.return_code);
-            // TODO If SARIF
             if ((0, utils_1.githubIsPullRequest)()) {
                 const newReviewComments = [];
                 const actionReviewComments = yield (0, utils_1.githubGetExistingReviewComments)(inputs_1.GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(utils_1.POLARIS_COMMENT_PREFACE)));
@@ -59607,12 +58995,6 @@ function getIssuesPage(polarisService, projectId, branchId, runId, compareBranch
             //issues_path += `&filter[issue][status][$eq]=${filterOpenOrClosed}`
             issues_path += `&filter%5Bissue%5D%5Bstatus%5D%5B%24eq%5D=${filterOpenOrClosed}`;
         }
-        //  // curl -X GET "https://sipse.polaris.synopsys.com/api/query/v1/issues?p
-        //  roject-id=f435f59c-5abb-4957-a725-28d93f0e645b
-        //  &branch-id=c7b567ee-39ae-4ca2-8d56-7496d29f32d8
-        //  &compare-branch-id=94f11f15-2892-4496-9245-b53b6d25ca10
-        //  &filter%5Bissue%5D%5Bstatus%5D%5B%24eq%5D=closed
-        //  &page%5Blimit%5D=50" -H "accept: application/vnd.api+json"
         exports.logger.debug(`Fetch issues from: ${issues_path}`);
         const issues_data = yield polarisService.get_url(issues_path);
         //logger.debug(`Polaris runs data for projectId ${projectId} and branchId ${branchId} ${JSON.stringify(issues_data.data, null, 2)}`)

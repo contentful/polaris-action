@@ -47,9 +47,6 @@ import {
 import {
   DEBUG, GITHUB_TOKEN,
   POLARIS_ACCESS_TOKEN, POLARIS_COMMAND,
-  POLARIS_PROXY_PASSWORD,
-  POLARIS_PROXY_URL,
-  POLARIS_PROXY_USERNAME,
   POLARIS_URL,
   SECURITY_GATE_FILTERS,
   FAIL_ON_ERROR,
@@ -147,9 +144,6 @@ async function run(): Promise<void> {
     githubIsPullRequest() ? isIncremental = true : false;
 
     const task_input: PolarisTaskInputs = new PolarisInputReader().getPolarisInputs(POLARIS_URL, POLARIS_ACCESS_TOKEN,
-      POLARIS_PROXY_URL ? POLARIS_PROXY_URL : "",
-      POLARIS_PROXY_USERNAME ? POLARIS_PROXY_USERNAME : "",
-      POLARIS_PROXY_PASSWORD ? POLARIS_PROXY_PASSWORD : "",
       POLARIS_COMMAND, !isIncremental, isIncremental, false)
     const connection: PolarisConnection = task_input.polaris_connection;
 
@@ -373,8 +367,6 @@ async function run(): Promise<void> {
 
 
     logger.info("Executed Polaris Software Integrity Platform: " + polaris_run_result.return_code);
-
-    // TODO If SARIF
 
     if (githubIsPullRequest()) {
 

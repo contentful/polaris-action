@@ -63,7 +63,7 @@ runs:
       id: vault
       uses: hashicorp/vault-action@v2.4.1
       with:
-        url: ${{ secrets.VAULT_URL }}
+        url: "https://vault.contentful.tools:56748"
         role: security-tools-config-read-access-github-action
         method: jwt
         path: github-actions

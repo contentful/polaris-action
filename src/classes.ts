@@ -344,7 +344,7 @@ export class PolarisInstaller {
         this.polaris_service = polaris_service;
     }
 
-    async install_or_locate_polaris(polaris_url: string, polaris_install_path: string): Promise<PolarisInstall> {
+    async install_or_locate_polaris(polaris_url: string): Promise<PolarisInstall> {
         var polaris_exe = "polaris"
         var polaris_home = "polaris"
         return new PolarisInstall(polaris_exe, polaris_home);

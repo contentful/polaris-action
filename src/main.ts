@@ -147,14 +147,6 @@ async function run(): Promise<void> {
       POLARIS_COMMAND, !isIncremental, isIncremental, false)
     const connection: PolarisConnection = task_input.polaris_connection;
 
-    var polaris_install_path: string | undefined;
-    polaris_install_path = os.tmpdir()
-    if (!polaris_install_path) {
-      logger.warn("Agent did not have a tool directory, polaris will be installed to the current working directory.");
-      polaris_install_path = process.cwd();
-    }
-    logger.info(`Polaris Software Integrity Platform will be installed to the following path: ` + polaris_install_path);
-
     logger.info("Connecting to Polaris Software Integrity Platform server.")
     const polaris_service = new PolarisService(logger, connection);
     await polaris_service.authenticate();
@@ -217,11 +209,12 @@ async function run(): Promise<void> {
 
       // logger.info("Installing Polaris Software Integrity Platform.");
       var polaris_installer = PolarisInstaller.default_installer(logger, polaris_service);
-      var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url, polaris_install_path);
+      var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url);
       logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
 
       logger.info("Running Polaris Software Integrity Platform.");
       var polaris_runner = new PolarisRunner(logger);
+      await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
       polaris_run_result = await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
 
       if (task_input.should_wait_for_issues) {

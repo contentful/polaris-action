@@ -4,8 +4,8 @@ export POLARIS_HOME=/root/polaris
 echo $(ls)
 echo $PATH
 printenv
-cd $GITHUB_REPOSITORY
+cd $GITHUB_WORKSPACE
 echo $(ls)
-git config --global --add safe.directory /root/$GITHUB_REPOSITORY
+# git config --global --add safe.directory /root/$GITHUB_REPOSITORY
 git status
 node /root/dist/index.js

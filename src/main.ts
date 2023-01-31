@@ -215,7 +215,7 @@ async function run(): Promise<void> {
       var polaris_runner = new PolarisRunner(logger);
       // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
       polaris_run_result = await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
-
+      logger.debug(`Scan result ${polaris_run_result}`)
       if (task_input.should_wait_for_issues) {
         logger.info("Checking for issues.")
         var polaris_waiter = new PolarisIssueWaiter(logger);

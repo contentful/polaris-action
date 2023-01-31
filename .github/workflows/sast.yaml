@@ -26,9 +26,3 @@ jobs:
           polaris_command: analyze -w
           security_gate_filters: '{ "severity": ["High", "Medium"] }'
           report_url: "https://github.com/contentful/security-tools-config/issues/new?title=False%20positive%20in%20Polaris"
-
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-        with:
-          limit-access-to-actor: true
-          limit-access-to-users: karankohli-cf

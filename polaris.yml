@@ -25,8 +25,9 @@ capture:
     coverity:
       skipFiles:
         - .*/sh/.*
+      cov-build: [--desktop]
 analyze:
-  mode: central
+  mode: local
   coverity:
     cov-analyze:
       ["--disable-default", "--enable-audit-mode", "--webapp-security"]

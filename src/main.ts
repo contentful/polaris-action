@@ -181,7 +181,7 @@ async function run(): Promise<void> {
       //If there are no changes, we can potentially bail early, so we do that first.
       // TODO: This may need some tweaks
       process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
-      var actual_build_command = `${POLARIS_COMMAND}`
+      var actual_build_command = `--co capture.build.coverity.skipFiles="[\'.*/sh/.*\']" ${POLARIS_COMMAND}`
       if (githubIsPullRequest() && task_input.should_populate_changeset) {
         logger.debug("Populating change set for Polaris Software Integrity Platform.");
         const changed_files = await githubGetChangesForPR(GITHUB_TOKEN)
@@ -202,8 +202,7 @@ async function run(): Promise<void> {
         change_set_environment.set_enable_incremental();
 
         await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
-        // --configuration-file polaris.yml --co project.branch=${MAIN_BRANCH} --co project.properties.Owner="${OWNER}" --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" analyze --coverity-ignore-capture-failure --wait
-        actual_build_command += "  --co capture.build.coverity.skipFiles=\[\".*/sh/.*\"] --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
+        actual_build_command += " --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
 

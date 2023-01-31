@@ -250,68 +250,73 @@ async function run(): Promise<void> {
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 
       const newResultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
-      const newResultsContent = await fs.readFile(newResultsJson[0])
-      const newResults = JSON.parse(newResultsContent.toString()) as IPolarisNewResult[]
-
-      // TODO validate file exists and is .json?
-      const jsonV7Content = await fs.readFile(resultsJson[0])
-      const coverityIssues = JSON.parse(jsonV7Content.toString()) as CoverityIssuesView
-
-      issuesUnified = new Array()
-      for (const issue of coverityIssues.issues) {
-        for (const newResult of newResults) {
-          if (issue.mergeKey == newResult.mergeKey) {
-            let issueUnified = <IPolarisIssueUnified>{}
-            issueUnified.key = issue.mergeKey
-            issueUnified.name = issue.subcategory
-            if (issue.checkerProperties?.subcategoryLongDescription) {
-              issueUnified.description = issue.checkerProperties?.subcategoryLongDescription
-            } else {
-              issueUnified.description = issue.subcategory
-            }
-            if (issue.checkerProperties?.subcategoryLocalEffect) {
-              issueUnified.localEffect = issue.checkerProperties?.subcategoryLocalEffect
-            } else {
-              issueUnified.localEffect = "(Local effect not available)"
-            }
-            issueUnified.checkerName = issue?.checkerName
-            issueUnified.path = issue.strippedMainEventFilePathname
-            issueUnified.line = issue.mainEventLineNumber
-            if (issue.checkerProperties?.impact) {
-              issueUnified.severity = issue.checkerProperties?.impact
-            } else {
-              issueUnified.severity = "(Unknown impact)"
-            }
-            if (issue.checkerProperties?.cweCategory) {
-              issueUnified.cwe = issue.checkerProperties?.cweCategory
-            } else {
-              issueUnified.cwe = "(No CWE)"
-            }
-            issueUnified.mainEvent = ""
-            issueUnified.mainEventDescription = "(Main event description not available)"
-            issueUnified.remediationEvent = ""
-            issueUnified.remediationEventDescription = ""
-            for (const event of issue.events) {
-              if (event.main) {
-                issueUnified.mainEvent = event.eventTag
-                issueUnified.mainEventDescription = event.eventDescription
-              }
-              if (event.eventTag == "remediation") {
-                issueUnified.remediationEvent = event.eventTag
-                issueUnified.remediationEventDescription = event.eventDescription
-              }
-            }
-            issueUnified.dismissed = false
-            issueUnified.events = []
-            issueUnified.link = "N/A" // TODO: Fix this up
-
-            if (!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
-              issuesUnified.push(issueUnified)
-
-            break
-          }
-        }
+      let newResultsContent, newResults, jsonV7Content, coverityIssues;
+      if (newResultsJson[0]) {
+        newResultsContent = await fs.readFile(newResultsJson[0])
+        newResults = JSON.parse(newResultsContent.toString()) as IPolarisNewResult[]
       }
+      if (resultsJson[0]) {
+        // TODO validate file exists and is .json?
+        jsonV7Content = await fs.readFile(resultsJson[0])
+        coverityIssues = JSON.parse(jsonV7Content.toString()) as CoverityIssuesView
+      }
+      issuesUnified = new Array()
+      if (coverityIssues?.issues)
+        for (const issue of coverityIssues.issues) {
+          if (newResults)
+            for (const newResult of newResults) {
+              if (issue.mergeKey == newResult.mergeKey) {
+                let issueUnified = <IPolarisIssueUnified>{}
+                issueUnified.key = issue.mergeKey
+                issueUnified.name = issue.subcategory
+                if (issue.checkerProperties?.subcategoryLongDescription) {
+                  issueUnified.description = issue.checkerProperties?.subcategoryLongDescription
+                } else {
+                  issueUnified.description = issue.subcategory
+                }
+                if (issue.checkerProperties?.subcategoryLocalEffect) {
+                  issueUnified.localEffect = issue.checkerProperties?.subcategoryLocalEffect
+                } else {
+                  issueUnified.localEffect = "(Local effect not available)"
+                }
+                issueUnified.checkerName = issue?.checkerName
+                issueUnified.path = issue.strippedMainEventFilePathname
+                issueUnified.line = issue.mainEventLineNumber
+                if (issue.checkerProperties?.impact) {
+                  issueUnified.severity = issue.checkerProperties?.impact
+                } else {
+                  issueUnified.severity = "(Unknown impact)"
+                }
+                if (issue.checkerProperties?.cweCategory) {
+                  issueUnified.cwe = issue.checkerProperties?.cweCategory
+                } else {
+                  issueUnified.cwe = "(No CWE)"
+                }
+                issueUnified.mainEvent = ""
+                issueUnified.mainEventDescription = "(Main event description not available)"
+                issueUnified.remediationEvent = ""
+                issueUnified.remediationEventDescription = ""
+                for (const event of issue.events) {
+                  if (event.main) {
+                    issueUnified.mainEvent = event.eventTag
+                    issueUnified.mainEventDescription = event.eventDescription
+                  }
+                  if (event.eventTag == "remediation") {
+                    issueUnified.remediationEvent = event.eventTag
+                    issueUnified.remediationEventDescription = event.eventDescription
+                  }
+                }
+                issueUnified.dismissed = false
+                issueUnified.events = []
+                issueUnified.link = "N/A" // TODO: Fix this up
+
+                if (!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
+                  issuesUnified.push(issueUnified)
+
+                break
+              }
+            }
+        }
     } else {
       var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
       var scan_json = JSON.parse(scan_json_text.toString());

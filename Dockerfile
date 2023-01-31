@@ -19,10 +19,10 @@ WORKDIR /root
 RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris_cli-linux64-${POLARIS_VERSION}.zip \
     && unzip -j polaris_cli-linux64.zip -d $INSTALL_DIR/bin
 
+RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
+
 # copy app code
 COPY ./dist ./dist
-
-RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
 
 COPY entrypoint.sh .
 

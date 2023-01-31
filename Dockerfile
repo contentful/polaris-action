@@ -7,7 +7,7 @@ ARG POLARIS_VERSION="2022.12.0"
 
 ENV INSTALL_DIR /tmp
 ENV PATH "$INSTALL_DIR/bin:$PATH"
-ENV POLARIS_HOME=/root/polaris
+# ENV POLARIS_HOME=/root/polaris
 
 RUN apt-get update \
     && apt-get install -y curl ca-certificates unzip git jq bash openssl
@@ -26,5 +26,5 @@ RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--de
 
 COPY entrypoint.sh .
 
-ENTRYPOINT ["/root/entrypoint.sh"]
-# ENTRYPOINT ["/bin/bash"]
+# ENTRYPOINT ["/root/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash"]

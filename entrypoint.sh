@@ -1,6 +1,6 @@
 #!/bin/sh -l
 export PATH="/tmp/bin:$PATH"
-export POLARIS_HOME=/root/polaris
+export POLARIS_HOME=/root/.synopsys/polaris
 echo $(ls)
 echo $PATH
 printenv

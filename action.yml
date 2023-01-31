@@ -59,11 +59,11 @@ runs:
         docker pull ghcr.io/contentful/polaris-action:docker-image
       shell: bash
 
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-      with:
-        limit-access-to-actor: true
-        limit-access-to-users: karankohli-cf
+    # - name: Setup upterm session
+    #   uses: lhotari/action-upterm@v1
+    #   with:
+    #     limit-access-to-actor: true
+    #     limit-access-to-users: karankohli-cf
 
     - name: 🔥 Run Polaris scan in docker
       run: |

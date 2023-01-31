@@ -61297,6 +61297,7 @@ function run() {
                 var polaris_runner = new classes_1.PolarisRunner(utils_1.logger);
                 // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
                 polaris_run_result = yield polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
+                utils_1.logger.debug(`Scan result ${polaris_run_result}`);
                 if (task_input.should_wait_for_issues) {
                     utils_1.logger.info("Checking for issues.");
                     var polaris_waiter = new classes_1.PolarisIssueWaiter(utils_1.logger);

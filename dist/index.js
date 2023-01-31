@@ -58255,7 +58255,7 @@ function run() {
                     const change_file = change_set_environment.get_or_create_file_path(process.cwd());
                     change_set_environment.set_enable_incremental();
                     yield new classes_1.ChangeSetFileWriter(utils_1.logger).write_change_set_file(change_file, changed_files);
-                    actual_build_command += " --ignore-uncapturable-inputs true --incremental $CHANGE_SET_FILE_PATH";
+                    actual_build_command += " --ignore-uncapturable-inputs --incremental $CHANGE_SET_FILE_PATH";
                     actual_build_command = new classes_1.ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
                 }
                 // logger.info("Installing Polaris Software Integrity Platform.");

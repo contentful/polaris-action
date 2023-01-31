@@ -21,10 +21,7 @@ RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris
 # copy app code
 COPY ./dist ./dist
 
-ENV INPUT_POLARIS_ACCESS_TOKEN=$POLARIS_ACCESS_TOKEN
-ENV INPUT_POLARIS_URL=$POLARIS_SERVER_URL
-ENV INPUT_POLARIS_COMMAND='install'
-RUN node ./dist/index.js
+RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
 
 COPY entrypoint.sh .
 

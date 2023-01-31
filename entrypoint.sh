@@ -5,4 +5,6 @@ echo $(ls)
 echo $PATH
 printenv
 cd $GITHUB_REPOSITORY
+echo $(ls)
+git status
 node /root/dist/index.js

@@ -139,7 +139,6 @@ async function run(): Promise<void> {
     }
     logger.debug(`Security gate filter: ${securityGateFilters}`)
 
-    // let isIncremental = POLARIS_COMMAND.includes("--incremental")
     let isIncremental = false;
     githubIsPullRequest() ? isIncremental = true : false;
 
@@ -204,7 +203,7 @@ async function run(): Promise<void> {
 
         await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
         // --configuration-file polaris.yml --co project.branch=${MAIN_BRANCH} --co project.properties.Owner="${OWNER}" --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" analyze --coverity-ignore-capture-failure --wait
-        actual_build_command += " --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
+        actual_build_command += "  --co capture.build.coverity.skipFiles=\[\".*/sh/.*\"] --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
 
@@ -239,7 +238,6 @@ async function run(): Promise<void> {
 
     if (isIncremental) {
       const resultsGlobber = require('fast-glob');
-      console.log('incremental')
       const resultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 

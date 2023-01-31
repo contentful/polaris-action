@@ -21,6 +21,7 @@ capture:
       files:
         - directory: ${project.projectDir}
         - excludeRegex: test|spec
+  build:
     coverity:
       skipFiles:
         - .*/sh/.*

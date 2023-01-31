@@ -5,6 +5,7 @@ project:
   revision:
     name: ${scm.git.commit}
     date: ${scm.git.commit.date}
+
 capture:
   fileSystem:
     javascript:
@@ -20,6 +21,9 @@ capture:
       files:
         - directory: ${project.projectDir}
         - excludeRegex: test|spec
+    coverity:
+      skipFiles:
+        - .*/sh/.*
 analyze:
   mode: central
   coverity:

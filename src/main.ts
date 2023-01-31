@@ -203,6 +203,7 @@ async function run(): Promise<void> {
         change_set_environment.set_enable_incremental();
 
         await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
+        // --configuration-file polaris.yml --co project.branch=${MAIN_BRANCH} --co project.properties.Owner="${OWNER}" --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" analyze --coverity-ignore-capture-failure --wait
         actual_build_command += " --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
@@ -214,7 +215,7 @@ async function run(): Promise<void> {
 
       logger.info("Running Polaris Software Integrity Platform.");
       var polaris_runner = new PolarisRunner(logger);
-      await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
+      // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
       polaris_run_result = await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
 
       if (task_input.should_wait_for_issues) {

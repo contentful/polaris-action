@@ -6,6 +6,6 @@ echo $PATH
 printenv
 cd $GITHUB_REPOSITORY
 echo $(ls)
-git config --global --add safe.directory /root/contentful/polaris-action
+git config --global --add safe.directory /root/$GITHUB_REPOSITORY
 git status
 node /root/dist/index.js

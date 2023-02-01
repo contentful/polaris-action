@@ -62356,6 +62356,7 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
         }
         console.debug(`PR number: ${pullRequestNumber} owner: ${github_1.context.repo.owner} repo: ${github_1.context.repo.repo} event: ${event}`);
         try {
+            console.log(comments);
             yield octokit.rest.pulls.createReview({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
@@ -62403,6 +62404,8 @@ function githubGetDiffMap(rawDiff) {
     console.info('Gathering diffs...');
     const diffMap = new Map();
     let path = UNKNOWN_FILE;
+    let diffs = rawDiff.split('\n');
+    // if (diffs.length > 100) return diffMap
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {
             // TODO: Handle spaces in path
@@ -62427,6 +62430,8 @@ function githubGetDiffMap(rawDiff) {
                 const startLine = parseInt(linesAddedString.substring(0, separatorPosition));
                 const lineCount = parseInt(linesAddedString.substring(separatorPosition + 1));
                 const endLine = startLine + lineCount - 1;
+                if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                    continue;
                 if (!diffMap.has(path)) {
                     diffMap.set(path, []);
                 }

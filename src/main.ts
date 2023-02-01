@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import * as path from "path";
 import { info } from '@actions/core'
+import 'source-map-support/register'
 import {
   coverityCreateNoLongerPresentMessage,
   coverityIsPresent,
@@ -181,7 +182,7 @@ async function run(): Promise<void> {
       //If there are no changes, we can potentially bail early, so we do that first.
       // TODO: This may need some tweaks
       process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
-      var actual_build_command = ` --configuration-file polaris.yml --co capture.build.coverity.cov-build="[--desktop]" --co analyze.mode=local ${POLARIS_COMMAND}`
+      var actual_build_command = `${POLARIS_COMMAND} --coverity-ignore-capture-failure`
       if (githubIsPullRequest() && task_input.should_populate_changeset) {
         logger.debug("Populating change set for Polaris Software Integrity Platform.");
         const changed_files = await githubGetChangesForPR(GITHUB_TOKEN)
@@ -311,7 +312,7 @@ async function run(): Promise<void> {
     } else {
       var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
       var scan_json = JSON.parse(scan_json_text.toString());
-
+      console.log(scan_json)
       const json_path = require('jsonpath');
       var project_id = json_path.query(scan_json, "$.projectInfo.projectId")
       var branch_id = json_path.query(scan_json, "$.projectInfo.branchId")
@@ -349,14 +350,14 @@ async function run(): Promise<void> {
           logger.error(`Running on pull request and unable to find previous Polaris analysis for merge target: ${merge_target_branch}, will fall back to full results`)
         } else {
           issuesUnified = await polarisGetIssuesUnified(polaris_service, project_id, branch_id,
-            true, runs[0].id, false, branch_id_compare, "", "opened")
+            true, runs[0]?.id, false, branch_id_compare, "", "opened")
         }
       }
 
       if (!issuesUnified) {
         logger.debug(`No pull request or merge comparison available, fetching full results`)
         issuesUnified = await polarisGetIssuesUnified(polaris_service, project_id, branch_id,
-          true, runs[0].id, false, "", "", "")
+          true, runs[0]?.id, false, "", "", "")
       }
     }
 

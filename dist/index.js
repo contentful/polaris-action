@@ -62356,7 +62356,9 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
         }
         console.debug(`PR number: ${pullRequestNumber} owner: ${github_1.context.repo.owner} repo: ${github_1.context.repo.repo} event: ${event}`);
         try {
-            console.log(comments);
+            exports.logger.debug("comments: " + comments);
+            if (comments.length > 4)
+                comments = [];
             yield octokit.rest.pulls.createReview({
                 owner: github_1.context.repo.owner,
                 repo: github_1.context.repo.repo,
@@ -62404,7 +62406,7 @@ function githubGetDiffMap(rawDiff) {
     console.info('Gathering diffs...');
     const diffMap = new Map();
     let path = UNKNOWN_FILE;
-    let diffs = rawDiff.split('\n');
+    // let diffs = rawDiff.split('\n');
     // if (diffs.length > 100) return diffMap
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {

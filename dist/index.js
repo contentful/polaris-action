@@ -61900,20 +61900,21 @@ function githubGetChangesForPR(github_token) {
         const files = response.data.files;
         if (files) {
             for (const file of files) {
-                switch (file.status) {
-                    case 'added':
-                        utils_1.logger.debug(`Change set added file: ${file.filename}`);
-                        changed_files.push(file.filename);
-                        break;
-                    case 'modified':
-                        utils_1.logger.debug(`Change set modified file: ${file.filename}`);
-                        changed_files.push(file.filename);
-                        break;
-                    case 'renamed':
-                        utils_1.logger.debug(`Change set renamed file: ${file.filename}`);
-                        changed_files.push(file.filename);
-                        break;
-                }
+                if (/\.(js|ts|tsx|go|rb|py)$/i.test(file.filename))
+                    switch (file.status) {
+                        case 'added':
+                            utils_1.logger.debug(`Change set added file: ${file.filename}`);
+                            changed_files.push(file.filename);
+                            break;
+                        case 'modified':
+                            utils_1.logger.debug(`Change set modified file: ${file.filename}`);
+                            changed_files.push(file.filename);
+                            break;
+                        case 'renamed':
+                            utils_1.logger.debug(`Change set renamed file: ${file.filename}`);
+                            changed_files.push(file.filename);
+                            break;
+                    }
             }
         }
         return (changed_files);

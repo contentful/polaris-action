@@ -90,20 +90,21 @@ export async function githubGetChangesForPR(github_token: string): Promise<Array
   const files = response.data.files
   if (files) {
     for (const file of files) {
-      switch (file.status) {
-        case 'added':
-          logger.debug(`Change set added file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-        case 'modified':
-          logger.debug(`Change set modified file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-        case 'renamed':
-          logger.debug(`Change set renamed file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-      }
+      if (/\.(js|ts|tsx|go|rb|py)$/i.test(file.filename))
+        switch (file.status) {
+          case 'added':
+            logger.debug(`Change set added file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+          case 'modified':
+            logger.debug(`Change set modified file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+          case 'renamed':
+            logger.debug(`Change set renamed file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+        }
     }
   }
 

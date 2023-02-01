@@ -92,13 +92,17 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
     }
 
     console.debug(`PR number: ${pullRequestNumber} owner: ${context.repo.owner} repo: ${context.repo.repo} event: ${event}`)
-    octokit.rest.pulls.createReview({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: pullRequestNumber,
-        event,
-        comments
-    })
+    try {
+        await octokit.rest.pulls.createReview({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pullRequestNumber,
+            event,
+            comments
+        })
+    } catch (e) {
+        logger.error("Unexpected error when creating review: " + e)
+    }
 }
 
 export async function githubGetExistingIssueComments(github_token: string): Promise<ExistingIssueComment[]> {
@@ -141,6 +145,9 @@ export function githubGetDiffMap(rawDiff: string): DiffMap {
             // TODO: Will this continue to work with other GitHub integrations?
             // path = `${process.env.GITHUB_WORKSPACE}/${line.split(' ')[2].substring(2)}`
             path = `${line.split(' ')[2].substring(2)}`
+
+            if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                continue;
 
             if (path === undefined) {
                 path = UNKNOWN_FILE

@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Synopsys Polaris
-        uses: ./
+        uses: contentful/polaris-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           polaris_url: ${{ secrets.POLARIS_SERVER_URL }}

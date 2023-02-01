@@ -93,7 +93,7 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
 
     console.debug(`PR number: ${pullRequestNumber} owner: ${context.repo.owner} repo: ${context.repo.repo} event: ${event}`)
     try {
-        logger.debug("comments: " + comments)
+        logger.debug("comments: " + JSON.stringify(comments))
         if (comments.length < 4)
             await octokit.rest.pulls.createReview({
                 owner: context.repo.owner,
@@ -108,7 +108,7 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
                 repo: context.repo.repo,
                 pull_number: pullRequestNumber,
                 event,
-                body: `Large diff, check results in Polaris`,
+                comments: comments.slice(0, 4),
             })
         }
     } catch (e) {

@@ -202,8 +202,9 @@ async function run(): Promise<void> {
         const change_set_environment = new ChangeSetEnvironment(logger, process.env);
         const change_file = change_set_environment.get_or_create_file_path(process.cwd());
         change_set_environment.set_enable_incremental();
-
-        await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
+        logger.info("changed files: ", changed_files);
+        logger.info("changed files set: ", [...new Set(changed_files)]);
+        await new ChangeSetFileWriter(logger).write_change_set_file(change_file, [...new Set(changed_files)]);
         actual_build_command += " --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }

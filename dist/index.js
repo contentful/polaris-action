@@ -62007,7 +62007,9 @@ function run() {
                     const change_set_environment = new classes_1.ChangeSetEnvironment(utils_1.logger, process.env);
                     const change_file = change_set_environment.get_or_create_file_path(process.cwd());
                     change_set_environment.set_enable_incremental();
-                    yield new classes_1.ChangeSetFileWriter(utils_1.logger).write_change_set_file(change_file, changed_files);
+                    utils_1.logger.info("changed files: ", changed_files);
+                    utils_1.logger.info("changed files set: ", [...new Set(changed_files)]);
+                    yield new classes_1.ChangeSetFileWriter(utils_1.logger).write_change_set_file(change_file, [...new Set(changed_files)]);
                     actual_build_command += " --incremental $CHANGE_SET_FILE_PATH";
                     actual_build_command = new classes_1.ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
                 }
@@ -62356,7 +62358,7 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
         }
         console.debug(`PR number: ${pullRequestNumber} owner: ${github_1.context.repo.owner} repo: ${github_1.context.repo.repo} event: ${event}`);
         try {
-            exports.logger.debug("comments: " + comments);
+            exports.logger.debug("comments: " + JSON.stringify(comments));
             if (comments.length < 4)
                 yield octokit.rest.pulls.createReview({
                     owner: github_1.context.repo.owner,
@@ -62371,7 +62373,7 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
                     repo: github_1.context.repo.repo,
                     pull_number: pullRequestNumber,
                     event,
-                    body: `Large diff, check results in Polaris`,
+                    comments: comments.slice(0, 4),
                 });
             }
         }

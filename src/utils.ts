@@ -93,6 +93,7 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
 
     console.debug(`PR number: ${pullRequestNumber} owner: ${context.repo.owner} repo: ${context.repo.repo} event: ${event}`)
     try {
+        console.log(comments)
         await octokit.rest.pulls.createReview({
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -137,8 +138,9 @@ export async function githubGetExistingReviewComments(github_token: string): Pro
 export function githubGetDiffMap(rawDiff: string): DiffMap {
     console.info('Gathering diffs...')
     const diffMap = new Map()
-
     let path = UNKNOWN_FILE
+    let diffs = rawDiff.split('\n');
+    // if (diffs.length > 100) return diffMap
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {
             // TODO: Handle spaces in path
@@ -169,6 +171,9 @@ export function githubGetDiffMap(rawDiff: string): DiffMap {
                 const startLine = parseInt(linesAddedString.substring(0, separatorPosition))
                 const lineCount = parseInt(linesAddedString.substring(separatorPosition + 1))
                 const endLine = startLine + lineCount - 1
+
+                if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                    continue;
 
                 if (!diffMap.has(path)) {
                     diffMap.set(path, [])

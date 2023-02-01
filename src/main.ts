@@ -203,7 +203,7 @@ async function run(): Promise<void> {
         change_set_environment.set_enable_incremental();
 
         await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
-        actual_build_command += " --coverity-ignore-capture-failure --incremental $CHANGE_SET_FILE_PATH"
+        actual_build_command += " --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
 

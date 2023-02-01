@@ -61265,7 +61265,7 @@ function run() {
                 //If there are no changes, we can potentially bail early, so we do that first.
                 // TODO: This may need some tweaks
                 process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME;
-                var actual_build_command = ` --co capture.build.coverity.cov-build="[--desktop]" --co analyze.mode=local ${inputs_1.POLARIS_COMMAND}`;
+                var actual_build_command = ` --configuration-file polaris.yml --co capture.build.coverity.cov-build="[--desktop]" --co analyze.mode=local ${inputs_1.POLARIS_COMMAND}`;
                 if ((0, utils_1.githubIsPullRequest)() && task_input.should_populate_changeset) {
                     utils_1.logger.debug("Populating change set for Polaris Software Integrity Platform.");
                     const changed_files = yield githubGetChangesForPR(inputs_1.GITHUB_TOKEN);

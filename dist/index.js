@@ -62355,13 +62355,18 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
             return Promise.reject(Error('Could not create Pull Request Review Comment: Action was not running on a Pull Request'));
         }
         console.debug(`PR number: ${pullRequestNumber} owner: ${github_1.context.repo.owner} repo: ${github_1.context.repo.repo} event: ${event}`);
-        octokit.rest.pulls.createReview({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            pull_number: pullRequestNumber,
-            event,
-            comments
-        });
+        try {
+            yield octokit.rest.pulls.createReview({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                pull_number: pullRequestNumber,
+                event,
+                comments
+            });
+        }
+        catch (e) {
+            exports.logger.error("Unexpected error when creating review: " + e);
+        }
     });
 }
 exports.githubCreateReview = githubCreateReview;
@@ -62404,6 +62409,8 @@ function githubGetDiffMap(rawDiff) {
             // TODO: Will this continue to work with other GitHub integrations?
             // path = `${process.env.GITHUB_WORKSPACE}/${line.split(' ')[2].substring(2)}`
             path = `${line.split(' ')[2].substring(2)}`;
+            if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                continue;
             if (path === undefined) {
                 path = UNKNOWN_FILE;
             }

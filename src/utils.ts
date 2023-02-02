@@ -103,12 +103,15 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
                 comments
             })
         else {
-            await octokit.rest.pulls.createReview({
+            let body = '';
+            comments.forEach(comment => {
+                body += comment.path + '#L' + comment.line + '\n' + comment.body + '\n\n'
+            })
+            await octokit.rest.pulls.createReviewComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: pullRequestNumber,
-                event,
-                comments: comments.slice(0, 4),
+                body,
             })
         }
     } catch (e) {

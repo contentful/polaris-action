@@ -62368,12 +62368,15 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
                     comments
                 });
             else {
-                yield octokit.rest.pulls.createReview({
+                let body = '';
+                comments.forEach(comment => {
+                    body += comment.path + '#L' + comment.line + '\n' + comment.body + '\n\n';
+                });
+                yield octokit.rest.pulls.createReviewComment({
                     owner: github_1.context.repo.owner,
                     repo: github_1.context.repo.repo,
                     pull_number: pullRequestNumber,
-                    event,
-                    comments: comments.slice(0, 4),
+                    body,
                 });
             }
         }

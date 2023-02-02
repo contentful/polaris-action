@@ -413,7 +413,7 @@ async function run(): Promise<void> {
           newReviewComments.push(createReviewComment(issue, reviewCommentBody))
         } else {
           logger.info('Issue not reported, adding an issue comment.')
-          // githubCreateIssueComment(GITHUB_TOKEN, issueCommentBody)
+          githubCreateIssueComment(GITHUB_TOKEN, issueCommentBody)
         }
       }
 

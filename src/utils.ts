@@ -102,18 +102,6 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
                 event,
                 comments
             })
-        else {
-            let body = '';
-            comments.forEach(comment => {
-                body += comment.path + '#L' + comment.line + '\n' + comment.body + '\n\n'
-            })
-            await octokit.rest.pulls.createReviewComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pullRequestNumber,
-                body,
-            })
-        }
     } catch (e) {
         logger.error("Unexpected error when creating review: " + e)
     }

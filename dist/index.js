@@ -62201,7 +62201,7 @@ function run() {
                     }
                     else {
                         utils_1.logger.info('Issue not reported, adding an issue comment.');
-                        (0, utils_1.githubCreateIssueComment)(inputs_1.GITHUB_TOKEN, issueCommentBody);
+                        // githubCreateIssueComment(GITHUB_TOKEN, issueCommentBody)
                     }
                 }
                 // for (const comment of actionReviewComments) {
@@ -62359,14 +62359,13 @@ function githubCreateReview(github_token, comments, event = 'COMMENT') {
         console.debug(`PR number: ${pullRequestNumber} owner: ${github_1.context.repo.owner} repo: ${github_1.context.repo.repo} event: ${event}`);
         try {
             exports.logger.debug("comments: " + JSON.stringify(comments));
-            if (comments.length < 4)
-                yield octokit.rest.pulls.createReview({
-                    owner: github_1.context.repo.owner,
-                    repo: github_1.context.repo.repo,
-                    pull_number: pullRequestNumber,
-                    event,
-                    comments
-                });
+            yield octokit.rest.pulls.createReview({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                pull_number: pullRequestNumber,
+                event,
+                comments
+            });
         }
         catch (e) {
             exports.logger.error("Unexpected error when creating review: " + e);

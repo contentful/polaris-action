@@ -94,14 +94,13 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
     console.debug(`PR number: ${pullRequestNumber} owner: ${context.repo.owner} repo: ${context.repo.repo} event: ${event}`)
     try {
         logger.debug("comments: " + JSON.stringify(comments))
-        if (comments.length < 4)
-            await octokit.rest.pulls.createReview({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pullRequestNumber,
-                event,
-                comments
-            })
+        await octokit.rest.pulls.createReview({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pullRequestNumber,
+            event,
+            comments
+        })
     } catch (e) {
         logger.error("Unexpected error when creating review: " + e)
     }

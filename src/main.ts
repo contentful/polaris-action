@@ -257,7 +257,6 @@ async function run(): Promise<void> {
       issuesUnified = new Array()
       if (coverityIssues?.issues)
         for (const issue of coverityIssues.issues) {
-          console.log(coverityIssues.issues)
           if (newResults)
             for (const newResult of newResults) {
               if (issue.mergeKey == newResult.mergeKey) {
@@ -373,7 +372,6 @@ async function run(): Promise<void> {
       const actionReviewComments = await githubGetExistingReviewComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(POLARIS_COMMENT_PREFACE)))
       const actionIssueComments = await githubGetExistingIssueComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body?.includes(POLARIS_COMMENT_PREFACE)))
       const diffMap = await githubGetPullRequestDiff(GITHUB_TOKEN).then(githubGetDiffMap)
-      console.log(issuesUnified)
       for (const issue of issuesUnified) {
         logger.info(`Found Polaris Issue ${issue.key} at ${issue.path}:${issue.line}`)
 

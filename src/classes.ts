@@ -1,4 +1,3 @@
-const HttpsProxyAgent = require("https-proxy-agent");
 const url = require('url');
 const Axios = require('axios');
 const moment = require("moment");
@@ -20,42 +19,21 @@ import {
 } from "./interfaces";
 
 export class PolarisConnection {
-    constructor(url: string, token: string, proxy: PolarisProxyInfo | undefined) {
+    constructor(url: string, token: string) {
         this.url = url;
         this.token = token;
-        this.proxy = proxy;
     }
     url: string;
     token: string;
-    proxy: PolarisProxyInfo | undefined;
 }
 
-export class PolarisProxyInfo {
-    proxy_url: string;
-    proxy_username: string | undefined;
-    proxy_password: string | undefined;
-    constructor(proxy_url: string, proxy_username: string | undefined, proxy_password: string | undefined) {
-        this.proxy_url = proxy_url;
-        this.proxy_username = proxy_username;
-        this.proxy_password = proxy_password;
-    }
-}
 
 export class PolarisInputReader {
     getPolarisInputs(polaris_url: string, polaris_token: string,
-        proxy_url: string, proxy_username: string, proxy_password: string,
         build_command: string,
         should_wait_for_issues: boolean,
         should_changeset: boolean,
         should_changeset_fail: boolean): PolarisTaskInputs {
-        var polaris_proxy_info: PolarisProxyInfo | undefined = undefined;
-
-        if (proxy_url && proxy_url.length > 0 && proxy_username && proxy_username.length > 0 &&
-            proxy_password && proxy_password.length > 0) {
-            polaris_proxy_info = new PolarisProxyInfo(proxy_url, proxy_username, proxy_password);
-        } else {
-            polaris_proxy_info = undefined
-        }
 
         if (polaris_url.endsWith("/") || polaris_url.endsWith("\\")) {
             polaris_url = polaris_url.slice(0, -1);
@@ -66,7 +44,7 @@ export class PolarisInputReader {
         }
 
         return {
-            polaris_connection: new PolarisConnection(polaris_url, polaris_token, polaris_proxy_info),
+            polaris_connection: new PolarisConnection(polaris_url, polaris_token),
             build_command: build_command,
             should_wait_for_issues: should_wait_for_issues,
             should_empty_changeset_fail: should_changeset_fail,
@@ -93,32 +71,11 @@ export class PolarisService {
         this.bearer_token = null;
         this.headers = null;
         this.log = log;
-
-
-        if (connection.proxy != undefined) {
-            log.info(`Using Proxy URL: ${connection.proxy.proxy_url}`)
-            var proxyOpts = url.parse(connection.proxy.proxy_url);
-
-            var proxyConfig: any = {
-                host: proxyOpts.hostname,
-                port: proxyOpts.port
-            };
-
-            if (connection.proxy.proxy_username && connection.proxy.proxy_password) {
-                log.info("Using configured proxy credentials.")
-                proxyConfig.auth = connection.proxy.proxy_username + ":" + connection.proxy.proxy_password;
-            }
-
-            const httpsAgent = new HttpsProxyAgent(proxyConfig)
-            this.axios = Axios.create({ httpsAgent });
-        } else {
-            this.axios = Axios.create();
-        }
+        this.axios = Axios.create();
     }
 
     async authenticate() {
         this.log.info("Authenticating with Polaris Software Integrity Platform.")
-        debug.enable('https-proxy-agent');
         this.bearer_token = await this.fetch_bearer_token();
         debug.disable();
         this.headers = {
@@ -387,62 +344,9 @@ export class PolarisInstaller {
         this.polaris_service = polaris_service;
     }
 
-    async install_or_locate_polaris(polaris_url: string, polaris_install_path: string): Promise<PolarisInstall> {
-        var polaris_cli_name = "polaris"; // used to be "swip"
-
-        var polaris_cli_location = path.resolve(polaris_install_path, "polaris");
-        var version_file = path.join(polaris_cli_location, "version.txt");
-        var relative_cli_url = this.platform_support.platform_specific_cli_zip_url_fragment(polaris_cli_name);
-        var cli_url = polaris_url + relative_cli_url;
-        var synopsys_path = path.resolve(polaris_install_path, ".synopsys");
-        var polaris_home = path.resolve(synopsys_path, "polaris");
-
-        this.log.info(`Using polaris cli location: ` + polaris_cli_location)
-        this.log.info(`Using polaris cli url: ` + cli_url)
-        this.log.debug("Checking for version file: " + version_file)
-
-        var download_cli = false;
-        var available_version_date = await this.polaris_service.fetch_cli_modified_date(cli_url);
-        if (fs.existsSync(version_file)) {
-            this.log.debug("Version file exists.")
-            var current_version_date = moment(fs.readFileSync(version_file, { encoding: 'utf8' }));
-            this.log.debug("Current version: " + current_version_date.format())
-            this.log.debug("Available version: " + available_version_date.format())
-            if (current_version_date.isBefore(available_version_date)) {
-                this.log.info("Downloading Polaris CLI because a newer version is available.")
-                download_cli = true;
-            } else {
-                this.log.info("Existing Polaris CLI will be used.")
-            }
-        } else {
-            this.log.info("Downloading Polaris CLI because a version file did not exist.")
-            download_cli = true;
-        }
-
-        if (download_cli) {
-            if (fs.existsSync(polaris_cli_location)) {
-                this.log.info(`Cleaning up the Polaris installation directory: ${polaris_cli_location}`);
-                this.log.info("Please do not place anything in this folder, it is under extension control.");
-                fse.removeSync(polaris_cli_location);
-            }
-
-            this.log.info("Starting download.")
-            const polaris_zip = path.join(polaris_install_path, "polaris.zip");
-            await this.polaris_service.download_cli(cli_url, polaris_zip);
-
-            this.log.info("Starting extraction.")
-            var zip = new zipper(polaris_zip);
-            await zip.extractAllTo(polaris_cli_location, /*overwrite*/ true);
-            this.log.info("Download and extraction finished.")
-
-            fse.ensureFileSync(version_file);
-            fs.writeFileSync(version_file, available_version_date.format(), 'utf8');
-            this.log.info(`Wrote version file: ${version_file}`)
-        }
-
-        this.log.info("Looking for Polaris executable.")
-        var polaris_exe = await this.executable_finder.find_executable(polaris_cli_location);
-        this.log.info("Found executable: " + polaris_exe)
+    async install_or_locate_polaris(polaris_url: string): Promise<PolarisInstall> {
+        var polaris_exe = "polaris"
+        var polaris_home = "polaris"
         return new PolarisInstall(polaris_exe, polaris_home);
     }
 }
@@ -458,14 +362,6 @@ export class PolarisRunner {
 
         env["POLARIS_SERVER_URL"] = connection.url;
         env["POLARIS_ACCESS_TOKEN"] = connection.token;
-
-        if (connection.proxy != undefined) {
-            var proxyOpts = urlParser.parse(connection.proxy.proxy_url);
-            if (connection.proxy.proxy_username && connection.proxy.proxy_password) {
-                proxyOpts.auth = connection.proxy.proxy_username + ":" + connection.proxy.proxy_password;
-            }
-            env["HTTPS_PROXY"] = urlParser.format(proxyOpts);
-        }
 
         if ("POLARIS_HOME" in env) {
             this.log.info("A POLARIS_HOME exists, will not attempt to override.")
@@ -495,8 +391,6 @@ export class PolarisRunner {
         var synopsysFolder = path.join(cwd, ".synopsys");
         var polarisFolder = path.join(synopsysFolder, "polaris");
         var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
-
-        delete process.env["HTTPS_PROXY"];
 
         return new PolarisRunResult(return_code, scanJsonFile);
     }
@@ -545,7 +439,7 @@ export class PolarisIssueWaiter {
 
         if (issue_counts.length != 0) {
             var total_count = issue_counts.reduce((a: any, b: any) => a + b, 0)
-            this.log.info("Total issues found : " + total_count + "(This will may be filtered for reporting")
+            this.log.info("Total issues found : " + total_count + " (This will may be filtered for reporting")
             return total_count;
         } else {
             this.log.info("Did not find any issue counts.")

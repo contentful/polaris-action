@@ -2,8 +2,8 @@
 import { promises as fs } from "fs";
 import os from "os";
 import * as path from "path";
-import * as exec from "@actions/exec";
 import { info } from '@actions/core'
+import 'source-map-support/register'
 import {
   coverityCreateNoLongerPresentMessage,
   coverityIsPresent,
@@ -48,9 +48,6 @@ import {
 import {
   DEBUG, GITHUB_TOKEN,
   POLARIS_ACCESS_TOKEN, POLARIS_COMMAND,
-  POLARIS_PROXY_PASSWORD,
-  POLARIS_PROXY_URL,
-  POLARIS_PROXY_USERNAME,
   POLARIS_URL,
   SECURITY_GATE_FILTERS,
   FAIL_ON_ERROR,
@@ -59,10 +56,8 @@ import {
 } from "./inputs";
 
 import { context } from "@actions/github";
-import * as core from '@actions/core'
 import { Octokit } from "@octokit/rest";
 import { CHECK_NAME } from "./application-constants";
-import * as installer from "./installer";
 
 interface IPolarisNewResult {
   "mergeKey": string,
@@ -95,20 +90,21 @@ export async function githubGetChangesForPR(github_token: string): Promise<Array
   const files = response.data.files
   if (files) {
     for (const file of files) {
-      switch (file.status) {
-        case 'added':
-          logger.debug(`Change set added file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-        case 'modified':
-          logger.debug(`Change set modified file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-        case 'renamed':
-          logger.debug(`Change set renamed file: ${file.filename}`)
-          changed_files.push(file.filename)
-          break
-      }
+      if (/\.(js|ts|tsx|go|rb|py)$/i.test(file.filename))
+        switch (file.status) {
+          case 'added':
+            logger.debug(`Change set added file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+          case 'modified':
+            logger.debug(`Change set modified file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+          case 'renamed':
+            logger.debug(`Change set renamed file: ${file.filename}`)
+            changed_files.push(file.filename)
+            break
+        }
     }
   }
 
@@ -119,18 +115,9 @@ async function run(): Promise<void> {
   logger.info('Starting Coverity GitHub Action')
 
   let polarisPolicyCheck;
-  if(FAIL_ON_ERROR === "true"){
-   polarisPolicyCheck = await githubCreateCheck(CHECK_NAME, GITHUB_TOKEN);
+  if (FAIL_ON_ERROR === "true") {
+    polarisPolicyCheck = await githubCreateCheck(CHECK_NAME, GITHUB_TOKEN);
   }
-  const runnerTmpdir = process.env["RUNNER_TEMP"] || os.tmpdir();
-  const tmpdir = await fs.mkdtemp(path.join(runnerTmpdir, "reviewdog-"));
-  const reviewdog = await core.group(
-    "🐶 Installing reviewdog ... https://github.com/reviewdog/reviewdog",
-    async () => {
-      return await installer.installReviewdog("latest", tmpdir);
-    }
-  );
-
   try {
     if (DEBUG === "true") {
       logger.level = 'debug'
@@ -154,24 +141,12 @@ async function run(): Promise<void> {
     }
     logger.debug(`Security gate filter: ${securityGateFilters}`)
 
-    // let isIncremental = POLARIS_COMMAND.includes("--incremental")
     let isIncremental = false;
     githubIsPullRequest() ? isIncremental = true : false;
 
     const task_input: PolarisTaskInputs = new PolarisInputReader().getPolarisInputs(POLARIS_URL, POLARIS_ACCESS_TOKEN,
-      POLARIS_PROXY_URL ? POLARIS_PROXY_URL : "",
-      POLARIS_PROXY_USERNAME ? POLARIS_PROXY_USERNAME : "",
-      POLARIS_PROXY_PASSWORD ? POLARIS_PROXY_PASSWORD : "",
       POLARIS_COMMAND, !isIncremental, isIncremental, false)
     const connection: PolarisConnection = task_input.polaris_connection;
-
-    var polaris_install_path: string | undefined;
-    polaris_install_path = os.tmpdir()
-    if (!polaris_install_path) {
-      logger.warn("Agent did not have a tool directory, polaris will be installed to the current working directory.");
-      polaris_install_path = process.cwd();
-    }
-    logger.info(`Polaris Software Integrity Platform will be installed to the following path: ` + polaris_install_path);
 
     logger.info("Connecting to Polaris Software Integrity Platform server.")
     const polaris_service = new PolarisService(logger, connection);
@@ -227,21 +202,23 @@ async function run(): Promise<void> {
         const change_set_environment = new ChangeSetEnvironment(logger, process.env);
         const change_file = change_set_environment.get_or_create_file_path(process.cwd());
         change_set_environment.set_enable_incremental();
-
-        await new ChangeSetFileWriter(logger).write_change_set_file(change_file, changed_files);
+        logger.info("changed files: ", changed_files);
+        logger.info("changed files set: ", [...new Set(changed_files)]);
+        await new ChangeSetFileWriter(logger).write_change_set_file(change_file, [...new Set(changed_files)]);
         actual_build_command += " --incremental $CHANGE_SET_FILE_PATH"
         actual_build_command = new ChangeSetReplacement().replace_build_command(actual_build_command, change_file);
       }
 
-      logger.info("Installing Polaris Software Integrity Platform.");
+      // logger.info("Installing Polaris Software Integrity Platform.");
       var polaris_installer = PolarisInstaller.default_installer(logger, polaris_service);
-      var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url, polaris_install_path);
+      var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url);
       logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
 
       logger.info("Running Polaris Software Integrity Platform.");
       var polaris_runner = new PolarisRunner(logger);
+      // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
       polaris_run_result = await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), actual_build_command);
-
+      logger.debug(`Scan result ${JSON.stringify(polaris_run_result)}`)
       if (task_input.should_wait_for_issues) {
         logger.info("Checking for issues.")
         var polaris_waiter = new PolarisIssueWaiter(logger);
@@ -263,77 +240,80 @@ async function run(): Promise<void> {
 
     if (isIncremental) {
       const resultsGlobber = require('fast-glob');
-
       const resultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 
       const newResultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
-      const newResultsContent = await fs.readFile(newResultsJson[0])
-      const newResults = JSON.parse(newResultsContent.toString()) as IPolarisNewResult[]
-
-      // TODO validate file exists and is .json?
-      const jsonV7Content = await fs.readFile(resultsJson[0])
-      const coverityIssues = JSON.parse(jsonV7Content.toString()) as CoverityIssuesView
-
-      issuesUnified = new Array()
-      for (const issue of coverityIssues.issues) {
-        for (const newResult of newResults) {
-          if (issue.mergeKey == newResult.mergeKey) {
-            let issueUnified = <IPolarisIssueUnified>{}
-            issueUnified.key = issue.mergeKey
-            issueUnified.name = issue.subcategory
-            if (issue.checkerProperties?.subcategoryLongDescription) {
-              issueUnified.description = issue.checkerProperties?.subcategoryLongDescription
-            } else {
-              issueUnified.description = issue.subcategory
-            }
-            if (issue.checkerProperties?.subcategoryLocalEffect) {
-              issueUnified.localEffect = issue.checkerProperties?.subcategoryLocalEffect
-            } else {
-              issueUnified.localEffect = "(Local effect not available)"
-            }
-            issueUnified.checkerName = issue.checkerName
-            issueUnified.path = issue.strippedMainEventFilePathname
-            issueUnified.line = issue.mainEventLineNumber
-            if (issue.checkerProperties?.impact) {
-              issueUnified.severity = issue.checkerProperties?.impact
-            } else {
-              issueUnified.severity = "(Unknown impact)"
-            }
-            if (issue.checkerProperties?.cweCategory) {
-              issueUnified.cwe = issue.checkerProperties?.cweCategory
-            } else {
-              issueUnified.cwe = "(No CWE)"
-            }
-            issueUnified.mainEvent = ""
-            issueUnified.mainEventDescription = "(Main event description not available)"
-            issueUnified.remediationEvent = ""
-            issueUnified.remediationEventDescription = ""
-            for (const event of issue.events) {
-              if (event.main) {
-                issueUnified.mainEvent = event.eventTag
-                issueUnified.mainEventDescription = event.eventDescription
-              }
-              if (event.eventTag == "remediation") {
-                issueUnified.remediationEvent = event.eventTag
-                issueUnified.remediationEventDescription = event.eventDescription
-              }
-            }
-            issueUnified.dismissed = false
-            issueUnified.events = []
-            issueUnified.link = "N/A" // TODO: Fix this up
-
-            if(!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
-            issuesUnified.push(issueUnified)
-
-            break
-          }
-        }
+      let newResultsContent, newResults, jsonV7Content, coverityIssues;
+      if (newResultsJson[0]) {
+        newResultsContent = await fs.readFile(newResultsJson[0])
+        newResults = JSON.parse(newResultsContent.toString()) as IPolarisNewResult[]
       }
-    } else {
-      var scan_json_text = fs.readFile(polaris_run_result.scan_cli_json_path);
-      var scan_json = JSON.parse(scan_json_text.toString());
+      if (resultsJson[0]) {
+        // TODO validate file exists and is .json?
+        jsonV7Content = await fs.readFile(resultsJson[0])
+        coverityIssues = JSON.parse(jsonV7Content.toString()) as CoverityIssuesView
+      }
+      issuesUnified = new Array()
+      if (coverityIssues?.issues)
+        for (const issue of coverityIssues.issues) {
+          if (newResults)
+            for (const newResult of newResults) {
+              if (issue.mergeKey == newResult.mergeKey) {
+                let issueUnified = <IPolarisIssueUnified>{}
+                issueUnified.key = issue.mergeKey
+                issueUnified.name = issue.subcategory
+                if (issue.checkerProperties?.subcategoryLongDescription) {
+                  issueUnified.description = issue.checkerProperties?.subcategoryLongDescription
+                } else {
+                  issueUnified.description = issue.subcategory
+                }
+                if (issue.checkerProperties?.subcategoryLocalEffect) {
+                  issueUnified.localEffect = issue.checkerProperties?.subcategoryLocalEffect
+                } else {
+                  issueUnified.localEffect = "(Local effect not available)"
+                }
+                issueUnified.checkerName = issue?.checkerName
+                issueUnified.path = issue.strippedMainEventFilePathname
+                issueUnified.line = issue.mainEventLineNumber
+                if (issue.checkerProperties?.impact) {
+                  issueUnified.severity = issue.checkerProperties?.impact
+                } else {
+                  issueUnified.severity = "(Unknown impact)"
+                }
+                if (issue.checkerProperties?.cweCategory) {
+                  issueUnified.cwe = issue.checkerProperties?.cweCategory
+                } else {
+                  issueUnified.cwe = "(No CWE)"
+                }
+                issueUnified.mainEvent = ""
+                issueUnified.mainEventDescription = "(Main event description not available)"
+                issueUnified.remediationEvent = ""
+                issueUnified.remediationEventDescription = ""
+                for (const event of issue.events) {
+                  if (event.main) {
+                    issueUnified.mainEvent = event.eventTag
+                    issueUnified.mainEventDescription = event.eventDescription
+                  }
+                  if (event.eventTag == "remediation") {
+                    issueUnified.remediationEvent = event.eventTag
+                    issueUnified.remediationEventDescription = event.eventDescription
+                  }
+                }
+                issueUnified.dismissed = false
+                issueUnified.events = []
+                issueUnified.link = "N/A" // TODO: Fix this up
 
+                if (!isIssueAllowed(securityGateFilters, issueUnified.severity, issueUnified.cwe, githubIsPullRequest() ? true : false))
+                  issuesUnified.push(issueUnified)
+
+                break
+              }
+            }
+        }
+    } else {
+      var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
+      var scan_json = JSON.parse(scan_json_text.toString());
       const json_path = require('jsonpath');
       var project_id = json_path.query(scan_json, "$.projectInfo.projectId")
       var branch_id = json_path.query(scan_json, "$.projectInfo.branchId")
@@ -371,14 +351,14 @@ async function run(): Promise<void> {
           logger.error(`Running on pull request and unable to find previous Polaris analysis for merge target: ${merge_target_branch}, will fall back to full results`)
         } else {
           issuesUnified = await polarisGetIssuesUnified(polaris_service, project_id, branch_id,
-            true, runs[0].id, false, branch_id_compare, "", "opened")
+            true, runs[0]?.id, false, branch_id_compare, "", "opened")
         }
       }
 
       if (!issuesUnified) {
         logger.debug(`No pull request or merge comparison available, fetching full results`)
         issuesUnified = await polarisGetIssuesUnified(polaris_service, project_id, branch_id,
-          true, runs[0].id, false, "", "", "")
+          true, runs[0]?.id, false, "", "", "")
       }
     }
 
@@ -386,15 +366,12 @@ async function run(): Promise<void> {
 
     logger.info("Executed Polaris Software Integrity Platform: " + polaris_run_result.return_code);
 
-    // TODO If SARIF
-
     if (githubIsPullRequest()) {
 
       const newReviewComments = []
       const actionReviewComments = await githubGetExistingReviewComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(POLARIS_COMMENT_PREFACE)))
       const actionIssueComments = await githubGetExistingIssueComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body?.includes(POLARIS_COMMENT_PREFACE)))
       const diffMap = await githubGetPullRequestDiff(GITHUB_TOKEN).then(githubGetDiffMap)
-
       for (const issue of issuesUnified) {
         logger.info(`Found Polaris Issue ${issue.key} at ${issue.path}:${issue.line}`)
 
@@ -404,24 +381,6 @@ async function run(): Promise<void> {
         const issueCommentBody = polarisCreateReviewCommentMessage(issue, REPORT_URL)
 
         const cwd = path.relative(process.env["GITHUB_WORKSPACE"] || process.cwd(), ".");
-        process.env["REVIEWDOG_GITHUB_API_TOKEN"] = core.getInput("github_token");
-        await exec.exec(
-          reviewdog,
-          [
-            "-f=rdjson",
-            `-name=polaris`,
-            `-reporter=github-pr-review`,
-            `-filter-mode=added`,
-            `-fail-on-error=true`,
-            `-level=error`,
-          ],
-          {
-            cwd,
-            input: Buffer.from(reviewCommentBody, "utf-8"),
-            ignoreReturnCode: true,
-          }
-        );
-
         const reviewCommentIndex = actionReviewComments.findIndex(comment => comment.line === issue.line &&
           comment.body.includes(issue.key))
         let existingMatchingReviewComment = undefined
@@ -501,6 +460,7 @@ async function run(): Promise<void> {
   } catch (unhandledError) {
     logger.debug('Canceling policy check because of an unhandled error.')
     polarisPolicyCheck?.cancelCheck()
+    console.log(unhandledError)
     logger.error(`Failed due to an unhandled error: '${unhandledError}'`)
   }
 }

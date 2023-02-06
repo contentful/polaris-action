@@ -92,13 +92,18 @@ export async function githubCreateReview(github_token: string, comments: NewRevi
     }
 
     console.debug(`PR number: ${pullRequestNumber} owner: ${context.repo.owner} repo: ${context.repo.repo} event: ${event}`)
-    octokit.rest.pulls.createReview({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        pull_number: pullRequestNumber,
-        event,
-        comments
-    })
+    try {
+        logger.debug("comments: " + JSON.stringify(comments))
+        await octokit.rest.pulls.createReview({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pullRequestNumber,
+            event,
+            comments
+        })
+    } catch (e) {
+        logger.error("Unexpected error when creating review: " + e)
+    }
 }
 
 export async function githubGetExistingIssueComments(github_token: string): Promise<ExistingIssueComment[]> {
@@ -133,14 +138,18 @@ export async function githubGetExistingReviewComments(github_token: string): Pro
 export function githubGetDiffMap(rawDiff: string): DiffMap {
     console.info('Gathering diffs...')
     const diffMap = new Map()
-
     let path = UNKNOWN_FILE
+    // let diffs = rawDiff.split('\n');
+    // if (diffs.length > 100) return diffMap
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {
             // TODO: Handle spaces in path
             // TODO: Will this continue to work with other GitHub integrations?
             // path = `${process.env.GITHUB_WORKSPACE}/${line.split(' ')[2].substring(2)}`
             path = `${line.split(' ')[2].substring(2)}`
+
+            if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                continue;
 
             if (path === undefined) {
                 path = UNKNOWN_FILE
@@ -162,6 +171,9 @@ export function githubGetDiffMap(rawDiff: string): DiffMap {
                 const startLine = parseInt(linesAddedString.substring(0, separatorPosition))
                 const lineCount = parseInt(linesAddedString.substring(separatorPosition + 1))
                 const endLine = startLine + lineCount - 1
+
+                if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
+                    continue;
 
                 if (!diffMap.has(path)) {
                     diffMap.set(path, [])
@@ -547,13 +559,6 @@ export async function getIssuesPage(polarisService: PolarisService, projectId: s
         issues_path += `&filter%5Bissue%5D%5Bstatus%5D%5B%24eq%5D=${filterOpenOrClosed}`
 
     }
-
-    //  // curl -X GET "https://sipse.polaris.synopsys.com/api/query/v1/issues?p
-    //  roject-id=f435f59c-5abb-4957-a725-28d93f0e645b
-    //  &branch-id=c7b567ee-39ae-4ca2-8d56-7496d29f32d8
-    //  &compare-branch-id=94f11f15-2892-4496-9245-b53b6d25ca10
-    //  &filter%5Bissue%5D%5Bstatus%5D%5B%24eq%5D=closed
-    //  &page%5Blimit%5D=50" -H "accept: application/vnd.api+json"
 
     logger.debug(`Fetch issues from: ${issues_path}`)
 

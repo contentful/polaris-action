@@ -183,7 +183,7 @@ async function run(): Promise<void> {
       //If there are no changes, we can potentially bail early, so we do that first.
       // TODO: This may need some tweaks
       process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
-      var actual_build_command = `${POLARIS_COMMAND} --coverity-ignore-capture-failure`
+      var actual_build_command = `${POLARIS_COMMAND}`
       if (githubIsPullRequest() && task_input.should_populate_changeset) {
         logger.debug("Populating change set for Polaris Software Integrity Platform.");
         const changed_files = await githubGetChangesForPR(GITHUB_TOKEN)
@@ -257,6 +257,7 @@ async function run(): Promise<void> {
       issuesUnified = new Array()
       if (coverityIssues?.issues)
         for (const issue of coverityIssues.issues) {
+          console.log(coverityIssues.issues)
           if (newResults)
             for (const newResult of newResults) {
               if (issue.mergeKey == newResult.mergeKey) {
@@ -314,7 +315,6 @@ async function run(): Promise<void> {
     } else {
       var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
       var scan_json = JSON.parse(scan_json_text.toString());
-      console.log(scan_json)
       const json_path = require('jsonpath');
       var project_id = json_path.query(scan_json, "$.projectInfo.projectId")
       var branch_id = json_path.query(scan_json, "$.projectInfo.branchId")
@@ -373,7 +373,7 @@ async function run(): Promise<void> {
       const actionReviewComments = await githubGetExistingReviewComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(POLARIS_COMMENT_PREFACE)))
       const actionIssueComments = await githubGetExistingIssueComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body?.includes(POLARIS_COMMENT_PREFACE)))
       const diffMap = await githubGetPullRequestDiff(GITHUB_TOKEN).then(githubGetDiffMap)
-
+      console.log(issuesUnified)
       for (const issue of issuesUnified) {
         logger.info(`Found Polaris Issue ${issue.key} at ${issue.path}:${issue.line}`)
 

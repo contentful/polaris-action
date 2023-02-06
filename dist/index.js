@@ -61987,7 +61987,7 @@ function run() {
                 //If there are no changes, we can potentially bail early, so we do that first.
                 // TODO: This may need some tweaks
                 process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME;
-                var actual_build_command = `${inputs_1.POLARIS_COMMAND} --coverity-ignore-capture-failure`;
+                var actual_build_command = `${inputs_1.POLARIS_COMMAND}`;
                 if ((0, utils_1.githubIsPullRequest)() && task_input.should_populate_changeset) {
                     utils_1.logger.debug("Populating change set for Polaris Software Integrity Platform.");
                     const changed_files = yield githubGetChangesForPR(inputs_1.GITHUB_TOKEN);
@@ -62057,6 +62057,7 @@ function run() {
                 issuesUnified = new Array();
                 if (coverityIssues === null || coverityIssues === void 0 ? void 0 : coverityIssues.issues)
                     for (const issue of coverityIssues.issues) {
+                        console.log(coverityIssues.issues);
                         if (newResults)
                             for (const newResult of newResults) {
                                 if (issue.mergeKey == newResult.mergeKey) {
@@ -62117,7 +62118,6 @@ function run() {
             else {
                 var scan_json_text = yield fs_1.promises.readFile(polaris_run_result.scan_cli_json_path);
                 var scan_json = JSON.parse(scan_json_text.toString());
-                console.log(scan_json);
                 const json_path = __nccwpck_require__(4378);
                 var project_id = json_path.query(scan_json, "$.projectInfo.projectId");
                 var branch_id = json_path.query(scan_json, "$.projectInfo.branchId");
@@ -62163,6 +62163,7 @@ function run() {
                 const actionReviewComments = yield (0, utils_1.githubGetExistingReviewComments)(inputs_1.GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(utils_1.POLARIS_COMMENT_PREFACE)));
                 const actionIssueComments = yield (0, utils_1.githubGetExistingIssueComments)(inputs_1.GITHUB_TOKEN).then(comments => comments.filter(comment => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.includes(utils_1.POLARIS_COMMENT_PREFACE); }));
                 const diffMap = yield (0, utils_1.githubGetPullRequestDiff)(inputs_1.GITHUB_TOKEN).then(utils_1.githubGetDiffMap);
+                console.log(issuesUnified);
                 for (const issue of issuesUnified) {
                     utils_1.logger.info(`Found Polaris Issue ${issue.key} at ${issue.path}:${issue.line}`);
                     let ignoredOnServer = issue.dismissed;

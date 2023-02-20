@@ -10,7 +10,7 @@ ENV PATH "$INSTALL_DIR/bin:$PATH"
 # ENV POLARIS_HOME=/root/polaris
 
 RUN apt-get update \
-    && apt-get install -y curl ca-certificates unzip git jq bash openssl
+    && apt-get install -y curl ca-certificates unzip git jq bash openssl golang-go
 
 SHELL ["/bin/bash", "-c"]
 

@@ -39,24 +39,13 @@ inputs:
     description: "URL to report false positives"
     required: false
 
-# runs:
-#   using: "composite"
-#   steps:
-#     - name: Run Polaris scan
-#       id: polaris_scan
-#       uses: docker://ghcr.io/contentful/polaris-action:docker-image
-#       env:
-#         POLARIS_ACCESS_TOKEN: ${{ secrets.POLARIS_ACCESS_TOKEN }}
-#       with:
-#         entrypoint: node index.js
-
 runs:
   using: composite
   steps:
     - name: 📥 Pull Image
       run: |
         echo ${{inputs.github_token}} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        docker pull ghcr.io/contentful/polaris-action:docker-image
+        docker pull ghcr.io/contentful/polaris-action:add-go-tools
       shell: bash
 
     - name: 🔥 Run Polaris scan in docker

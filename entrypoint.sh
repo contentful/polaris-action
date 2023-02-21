@@ -1,5 +1,6 @@
 #!/bin/sh -l
 export PATH="/tmp/bin:$PATH"
+export PATH="$PATH:/usr/bin/go"
 export POLARIS_HOME=/root/.synopsys/polaris
 echo $(ls)
 echo $PATH

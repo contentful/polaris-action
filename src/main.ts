@@ -153,23 +153,13 @@ async function run(): Promise<void> {
     await polaris_service.authenticate();
     logger.debug("Authenticated with polaris.");
 
-    // In the future it would be nice to supoprt phone home for stats
     try {
       logger.debug("Fetching organization name and task version.");
       const org_name = await polaris_service.fetch_organization_name();
       logger.debug(`Organization name: ${org_name}`)
-      /*
-      const task_version = PhoneHomeService.FindTaskVersion();
 
-      logger.debug("Starting phone home.");
-      const phone_home_service = PhoneHomeService.CreateClient(log);
-      await phone_home_service.phone_home(connection.url, task_version, org_name);
-      logger.debug("Phoned home.");
-       */
     } catch (e) {
-      /*
-      logger.debug("Unable to phone home.");
-       */
+      logger.debug("Unable to fetch org name.");
     }
 
     let polaris_run_result = undefined
@@ -213,6 +203,7 @@ async function run(): Promise<void> {
       var polaris_installer = PolarisInstaller.default_installer(logger, polaris_service);
       var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url);
       logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
+      await polaris_installer.fetch_or_set_config()
 
       logger.info("Running Polaris Software Integrity Platform.");
       var polaris_runner = new PolarisRunner(logger);
@@ -362,12 +353,9 @@ async function run(): Promise<void> {
       }
     }
 
-
-
     logger.info("Executed Polaris Software Integrity Platform: " + polaris_run_result.return_code);
 
     if (githubIsPullRequest()) {
-
       const newReviewComments = []
       const actionReviewComments = await githubGetExistingReviewComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body.includes(POLARIS_COMMENT_PREFACE)))
       const actionIssueComments = await githubGetExistingIssueComments(GITHUB_TOKEN).then(comments => comments.filter(comment => comment.body?.includes(POLARIS_COMMENT_PREFACE)))
@@ -415,20 +403,6 @@ async function run(): Promise<void> {
         }
       }
 
-      // for (const comment of actionReviewComments) {
-      //   if (coverityIsPresent(comment.body)) {
-      //     info(`Comment ${comment.id} represents a Coverity issue which is no longer present, updating comment to reflect resolution.`)
-      //     githubUpdateExistingReviewComment(GITHUB_TOKEN, comment.id, coverityCreateNoLongerPresentMessage(comment.body))
-      //   }
-      // }
-
-      // for (const comment of actionIssueComments) {
-      //   if (comment.body !== undefined && coverityIsPresent(comment.body)) {
-      //     info(`Comment ${comment.id} represents a Coverity issue which is no longer present, updating comment to reflect resolution.`)
-      //     githubUpdateExistingReviewComment(GITHUB_TOKEN, comment.id, coverityCreateNoLongerPresentMessage(comment.body))
-      //   }
-      // }
-
       if (newReviewComments.length > 0) {
         info('Publishing review...')
         githubCreateReview(GITHUB_TOKEN, newReviewComments)
@@ -463,16 +437,6 @@ async function run(): Promise<void> {
     console.log(unhandledError)
     logger.error(`Failed due to an unhandled error: '${unhandledError}'`)
   }
-}
-
-function isInDiff(issue: CoverityIssueOccurrence, diffMap: DiffMap): boolean {
-  const diffHunks = diffMap.get(issue.mainEventFilePathname)
-
-  if (!diffHunks) {
-    return false
-  }
-
-  return diffHunks.filter(hunk => hunk.firstLine <= issue.mainEventLineNumber).some(hunk => issue.mainEventLineNumber <= hunk.lastLine)
 }
 
 function createReviewComment(issue: IPolarisIssueUnified, commentBody: string): NewReviewComment {

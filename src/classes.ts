@@ -27,7 +27,6 @@ export class PolarisConnection {
     token: string;
 }
 
-
 export class PolarisInputReader {
     getPolarisInputs(polaris_url: string, polaris_token: string,
         build_command: string,
@@ -193,6 +192,7 @@ export class PolarisService {
             writer.on('error', reject)
         });
     }
+
 }
 
 export class ChangeSetEnvironment {
@@ -348,6 +348,16 @@ export class PolarisInstaller {
         var polaris_exe = "polaris"
         var polaris_home = "polaris"
         return new PolarisInstall(polaris_exe, polaris_home);
+    }
+
+    async fetch_or_set_config() {
+        let polaris_config = "polaris.yml";
+        if (!fs.existsSync(polaris_config)) {
+            this.log.info("Downloading Polaris Config because it is not available.")
+            // check if file exists in repo if not use your file
+            await fs.rename('.polaris.yml', 'polaris.yml')
+        }
+        return
     }
 }
 

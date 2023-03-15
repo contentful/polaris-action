@@ -653,3 +653,20 @@ export function polarisIsInDiff(issue: IPolarisIssueUnified, diffMap: DiffMap): 
 
     return diffHunks.filter(hunk => hunk.firstLine <= issue.line).some(hunk => issue.line <= hunk.lastLine)
 }
+
+export async function githubGetExistingReviewComments(github_token: string): Promise<ExistingReviewComment[]> {
+    const octokit = getOctokit(github_token)
+
+    const pullRequestNumber = githubGetPullRequestNumber()
+    if (!pullRequestNumber) {
+        return Promise.reject(Error('Could not create Pull Request Review Comment: Action was not running on a Pull Request'))
+    }
+
+    const reviewCommentsResponse = await octokit.rest.pulls.listReviewComments({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: pullRequestNumber
+    })
+
+    return reviewCommentsResponse.data
+}

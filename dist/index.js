@@ -61568,6 +61568,22 @@ class PolarisInstaller {
             return new PolarisInstall(polaris_exe, polaris_home);
         });
     }
+    fetch_or_set_config() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let polaris_config = "polaris.yml";
+            this.log.info("Starting polaris config check");
+            if (!fs.existsSync(polaris_config)) {
+                this.log.info("Downloading Polaris Config because it is not available.");
+                // check if file exists in repo if not use your file
+                yield fs.rename('.polaris.yml', 'polaris.yml');
+            }
+            else {
+                this.log.info("Polaris config file already exists");
+                yield fs.rename('.polaris.yml', 'polaris.yml');
+            }
+            return;
+        });
+    }
 }
 exports.PolarisInstaller = PolarisInstaller;
 class PolarisRunner {
@@ -61957,24 +61973,13 @@ function run() {
             const polaris_service = new classes_1.PolarisService(utils_1.logger, connection);
             yield polaris_service.authenticate();
             utils_1.logger.debug("Authenticated with polaris.");
-            // In the future it would be nice to supoprt phone home for stats
             try {
                 utils_1.logger.debug("Fetching organization name and task version.");
                 const org_name = yield polaris_service.fetch_organization_name();
                 utils_1.logger.debug(`Organization name: ${org_name}`);
-                /*
-                const task_version = PhoneHomeService.FindTaskVersion();
-          
-                logger.debug("Starting phone home.");
-                const phone_home_service = PhoneHomeService.CreateClient(log);
-                await phone_home_service.phone_home(connection.url, task_version, org_name);
-                logger.debug("Phoned home.");
-                 */
             }
             catch (e) {
-                /*
-                logger.debug("Unable to phone home.");
-                 */
+                utils_1.logger.debug("Unable to fetch org name.");
             }
             let polaris_run_result = undefined;
             if (inputs_1.SKIP_RUN) {
@@ -62017,6 +62022,7 @@ function run() {
                 var polaris_installer = classes_1.PolarisInstaller.default_installer(utils_1.logger, polaris_service);
                 var polaris_install = yield polaris_installer.install_or_locate_polaris(connection.url);
                 utils_1.logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
+                yield polaris_installer.fetch_or_set_config();
                 utils_1.logger.info("Running Polaris Software Integrity Platform.");
                 var polaris_runner = new classes_1.PolarisRunner(utils_1.logger);
                 // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');
@@ -62203,18 +62209,6 @@ function run() {
                         // githubCreateIssueComment(GITHUB_TOKEN, issueCommentBody)
                     }
                 }
-                // for (const comment of actionReviewComments) {
-                //   if (coverityIsPresent(comment.body)) {
-                //     info(`Comment ${comment.id} represents a Coverity issue which is no longer present, updating comment to reflect resolution.`)
-                //     githubUpdateExistingReviewComment(GITHUB_TOKEN, comment.id, coverityCreateNoLongerPresentMessage(comment.body))
-                //   }
-                // }
-                // for (const comment of actionIssueComments) {
-                //   if (comment.body !== undefined && coverityIsPresent(comment.body)) {
-                //     info(`Comment ${comment.id} represents a Coverity issue which is no longer present, updating comment to reflect resolution.`)
-                //     githubUpdateExistingReviewComment(GITHUB_TOKEN, comment.id, coverityCreateNoLongerPresentMessage(comment.body))
-                //   }
-                // }
                 if (newReviewComments.length > 0) {
                     (0, core_1.info)('Publishing review...');
                     (0, utils_1.githubCreateReview)(inputs_1.GITHUB_TOKEN, newReviewComments);
@@ -62248,13 +62242,6 @@ function run() {
             utils_1.logger.error(`Failed due to an unhandled error: '${unhandledError}'`);
         }
     });
-}
-function isInDiff(issue, diffMap) {
-    const diffHunks = diffMap.get(issue.mainEventFilePathname);
-    if (!diffHunks) {
-        return false;
-    }
-    return diffHunks.filter(hunk => hunk.firstLine <= issue.mainEventLineNumber).some(hunk => issue.mainEventLineNumber <= hunk.lastLine);
 }
 function createReviewComment(issue, commentBody) {
     return {

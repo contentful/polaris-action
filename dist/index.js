@@ -61568,22 +61568,6 @@ class PolarisInstaller {
             return new PolarisInstall(polaris_exe, polaris_home);
         });
     }
-    fetch_or_set_config() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let polaris_config = "polaris.yml";
-            this.log.info("Starting polaris config check");
-            if (!fs.existsSync(polaris_config)) {
-                this.log.info("Downloading Polaris Config because it is not available.");
-                // check if file exists in repo if not use your file
-                yield fs.rename('.polaris.yml', 'polaris.yml');
-            }
-            else {
-                this.log.info("Polaris config file already exists");
-                yield fs.rename('.polaris.yml', 'polaris.yml');
-            }
-            return;
-        });
-    }
 }
 exports.PolarisInstaller = PolarisInstaller;
 class PolarisRunner {
@@ -62022,7 +62006,6 @@ function run() {
                 var polaris_installer = classes_1.PolarisInstaller.default_installer(utils_1.logger, polaris_service);
                 var polaris_install = yield polaris_installer.install_or_locate_polaris(connection.url);
                 utils_1.logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
-                yield polaris_installer.fetch_or_set_config();
                 utils_1.logger.info("Running Polaris Software Integrity Platform.");
                 var polaris_runner = new classes_1.PolarisRunner(utils_1.logger);
                 // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');

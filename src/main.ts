@@ -203,8 +203,6 @@ async function run(): Promise<void> {
       var polaris_installer = PolarisInstaller.default_installer(logger, polaris_service);
       var polaris_install: PolarisInstall = await polaris_installer.install_or_locate_polaris(connection.url);
       logger.info("Found Polaris Software Integrity Platform: " + polaris_install.polaris_executable);
-      await polaris_installer.fetch_or_set_config()
-
       logger.info("Running Polaris Software Integrity Platform.");
       var polaris_runner = new PolarisRunner(logger);
       // await polaris_runner.execute_cli(connection, polaris_install, process.cwd(), 'analyze');

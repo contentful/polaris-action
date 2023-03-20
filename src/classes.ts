@@ -352,9 +352,13 @@ export class PolarisInstaller {
 
     async fetch_or_set_config() {
         let polaris_config = "polaris.yml";
+        this.log.info("Starting polaris config check")
         if (!fs.existsSync(polaris_config)) {
             this.log.info("Downloading Polaris Config because it is not available.")
             // check if file exists in repo if not use your file
+            await fs.rename('.polaris.yml', 'polaris.yml')
+        } else {
+            this.log.info("Polaris config file already exists")
             await fs.rename('.polaris.yml', 'polaris.yml')
         }
         return

@@ -3,7 +3,7 @@ export PATH="/tmp/bin:$PATH"
 export POLARIS_HOME=/root/.synopsys/polaris
 echo $(ls)
 echo $PATH
-printenv
+# printenv
 cd $GITHUB_WORKSPACE
 echo $(ls)
 if [ ! -f polaris.yml ]; then
@@ -11,5 +11,4 @@ if [ ! -f polaris.yml ]; then
     mv /root/.polaris.yml polaris.yml
 fi
 git config --global --add safe.directory $GITHUB_WORKSPACE
-git status
 node /root/dist/index.js

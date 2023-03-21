@@ -1,0 +1,45 @@
+version: "1"
+project:
+  name: ${scm.git.repo}
+  branch: ${scm.git.branch}
+  revision:
+    name: ${scm.git.commit}
+    date: ${scm.git.commit.date}
+capture:
+  build:
+    cleanCommands:
+      - shell: [go, clean]
+    buildCommands:
+      - shell: [go, build]
+    coverity:
+      skipFiles:
+        - .*/mod/.*
+  fileSystem:
+    javascript:
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor
+    typescript:
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor
+    python:
+      files:
+        - directory: ${project.projectDir}
+    ruby:
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: test|spec
+analyze:
+  mode: central
+  coverity:
+    cov-analyze:
+      - --disable-default
+      - --security
+      - --enable-audit-mode
+      - --webapp-security
+    usebudaforjavadotnet: disable
+install:
+  coverity:
+    version: default
+serverUrl: https://contentful.polaris.synopsys.com

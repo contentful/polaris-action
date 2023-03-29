@@ -90,7 +90,8 @@ export async function githubGetChangesForPR(github_token: string): Promise<Array
   const files = response.data.files
   if (files) {
     for (const file of files) {
-      if (/\.(js|ts|tsx|go|rb|py)$/i.test(file.filename))
+      // file extensions
+      if (/\.(js|ts|tsx|go|rb|py|java)$/i.test(file.filename))
         switch (file.status) {
           case 'added':
             logger.debug(`Change set added file: ${file.filename}`)
@@ -170,8 +171,6 @@ async function run(): Promise<void> {
         return_code: 0
       }
     } else {
-      //If there are no changes, we can potentially bail early, so we do that first.
-      // TODO: This may need some tweaks
       process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME
       var actual_build_command = `${POLARIS_COMMAND}`
       if (githubIsPullRequest() && task_input.should_populate_changeset) {
@@ -213,7 +212,7 @@ async function run(): Promise<void> {
         var polaris_waiter = new PolarisIssueWaiter(logger);
         var issue_count = await polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
         // Ignore, we will calculate issues separately
-        // logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
+        logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
       } else {
         logger.info("Will not check for issues.")
       }

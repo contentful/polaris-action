@@ -24,7 +24,7 @@ capture:
       extensions: [rb]
       files:
         - directory: ${project.projectDir}
-        - excludeRegex: node_modules|bower_components|vendor|test|spec
+        - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     python:
       extensions: [py]
       files:

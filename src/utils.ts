@@ -144,7 +144,6 @@ export function githubGetDiffMap(rawDiff: string): DiffMap {
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {
             // TODO: Handle spaces in path
-            // TODO: Will this continue to work with other GitHub integrations?
             // path = `${process.env.GITHUB_WORKSPACE}/${line.split(' ')[2].substring(2)}`
             path = `${line.split(' ')[2].substring(2)}`
 
@@ -164,7 +163,6 @@ export function githubGetDiffMap(rawDiff: string): DiffMap {
 
             const linesAddedPosition = changedLines.indexOf('+')
             if (linesAddedPosition > -1) {
-                // We only care about the right side because Coverity can only analyze what's there, not what used to be --rotte FEB 2022
                 const linesAddedString = changedLines.substring(linesAddedPosition + 1)
                 const separatorPosition = linesAddedString.indexOf(',')
 

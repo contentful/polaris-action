@@ -61315,10 +61315,6 @@ class PolarisService {
         });
     }
     fetch_bearer_token() {
-        // this is a workaround for https://github.com/TooTallNate/node-https-proxy-agent/issues/102
-        //basically NodeJS thinks all event loops are closed, this ensures the event look hasn't closed. 
-        // TODO: Need to switch to a new http library that doesn't suffer from this bug.
-        //Basically we need to reject the promise ourselves 
         const resultPromise = new Promise((resolve, reject) => {
             const timeout = 10000;
             setTimeout(() => { reject(new Error(`Failed to authenticate with Polaris Software Integrity Platform. This may be a problem with your url, proxy setup or network.`)); }, timeout);
@@ -61900,7 +61896,8 @@ function githubGetChangesForPR(github_token) {
         const files = response.data.files;
         if (files) {
             for (const file of files) {
-                if (/\.(js|ts|tsx|go|rb|py)$/i.test(file.filename))
+                // file extensions
+                if (/\.(js|ts|tsx|go|rb|py|java)$/i.test(file.filename))
                     switch (file.status) {
                         case 'added':
                             utils_1.logger.debug(`Change set added file: ${file.filename}`);
@@ -61973,8 +61970,6 @@ function run() {
                 };
             }
             else {
-                //If there are no changes, we can potentially bail early, so we do that first.
-                // TODO: This may need some tweaks
                 process.env.GIT_BRANCH = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME;
                 var actual_build_command = `${inputs_1.POLARIS_COMMAND}`;
                 if ((0, utils_1.githubIsPullRequest)() && task_input.should_populate_changeset) {
@@ -62016,7 +62011,7 @@ function run() {
                     var polaris_waiter = new classes_1.PolarisIssueWaiter(utils_1.logger);
                     var issue_count = yield polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
                     // Ignore, we will calculate issues separately
-                    // logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
+                    utils_1.logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`);
                 }
                 else {
                     utils_1.logger.info("Will not check for issues.");
@@ -62380,7 +62375,6 @@ function githubGetDiffMap(rawDiff) {
     for (const line of rawDiff.split('\n')) {
         if (line.startsWith('diff --git')) {
             // TODO: Handle spaces in path
-            // TODO: Will this continue to work with other GitHub integrations?
             // path = `${process.env.GITHUB_WORKSPACE}/${line.split(' ')[2].substring(2)}`
             path = `${line.split(' ')[2].substring(2)}`;
             if (/\.(js|ts|tsx|go|rb|py)$/i.test(path) == false)
@@ -62395,7 +62389,6 @@ function githubGetDiffMap(rawDiff) {
             changedLines = changedLines.substring(0, changedLines.indexOf(' @@'));
             const linesAddedPosition = changedLines.indexOf('+');
             if (linesAddedPosition > -1) {
-                // We only care about the right side because Coverity can only analyze what's there, not what used to be --rotte FEB 2022
                 const linesAddedString = changedLines.substring(linesAddedPosition + 1);
                 const separatorPosition = linesAddedString.indexOf(',');
                 const startLine = parseInt(linesAddedString.substring(0, separatorPosition));

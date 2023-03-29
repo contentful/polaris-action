@@ -16,20 +16,30 @@ capture:
         - .*/mod/.*
   fileSystem:
     javascript:
+      extensions: [js, ts]
       files:
         - directory: ${project.projectDir}
-        - excludeRegex: node_modules|bower_components|vendor
-    typescript:
-      files:
-        - directory: ${project.projectDir}
-        - excludeRegex: node_modules|bower_components|vendor
-    python:
-      files:
-        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     ruby:
+      extensions: [rb]
       files:
         - directory: ${project.projectDir}
-        - excludeRegex: test|spec
+        - excludeRegex: node_modules|bower_components|vendor|test|spec
+    python:
+      extensions: [py]
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
+    php:
+      extensions: [php]
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
+    java:
+      extensions: [java]
+      files:
+        - directory: ${project.projectDir}
+        - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
 analyze:
   mode: central
   coverity:

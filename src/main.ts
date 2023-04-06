@@ -210,9 +210,16 @@ async function run(): Promise<void> {
       if (task_input.should_wait_for_issues) {
         logger.info("Checking for issues.")
         var polaris_waiter = new PolarisIssueWaiter(logger);
-        var issue_count = await polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
-        // Ignore, we will calculate issues separately
-        logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
+        var issue_count;
+        try {
+          issue_count = await polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
+          // Ignore, we will calculate issues separately
+          logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
+        } catch (error) {
+          logger.error(`Cant read polaris issues `)
+          polarisPolicyCheck?.cancelCheck()
+          process.exit(2)
+        }
       } else {
         logger.info("Will not check for issues.")
       }

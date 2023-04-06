@@ -236,6 +236,13 @@ async function run(): Promise<void> {
     if (isIncremental) {
       const resultsGlobber = require('fast-glob');
       const resultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
+
+      if (!resultsJson) {
+        logger.error(`Unable to find Polaris run results.`)
+        polarisPolicyCheck?.cancelCheck()
+        process.exit(2)
+      }
+
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 
       const newResultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);

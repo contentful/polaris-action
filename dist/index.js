@@ -62009,9 +62009,17 @@ function run() {
                 if (task_input.should_wait_for_issues) {
                     utils_1.logger.info("Checking for issues.");
                     var polaris_waiter = new classes_1.PolarisIssueWaiter(utils_1.logger);
-                    var issue_count = yield polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
-                    // Ignore, we will calculate issues separately
-                    utils_1.logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`);
+                    var issue_count;
+                    try {
+                        issue_count = yield polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
+                        // Ignore, we will calculate issues separately
+                        utils_1.logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`);
+                    }
+                    catch (error) {
+                        utils_1.logger.error(`Cant read polaris issues `);
+                        polarisPolicyCheck === null || polarisPolicyCheck === void 0 ? void 0 : polarisPolicyCheck.cancelCheck();
+                        process.exit(2);
+                    }
                 }
                 else {
                     utils_1.logger.info("Will not check for issues.");

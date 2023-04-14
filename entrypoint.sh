@@ -5,9 +5,9 @@ echo $(ls)
 
 cd $GITHUB_WORKSPACE
 
-if [ -f polaris.yml ]; then
+if [ !-f polaris.yml ]; then
     echo "polaris.yml not found!"
-    rm polaris.yml
+    mv /root/.polaris.yml polaris.yml
 fi
 git config --global --add safe.directory $GITHUB_WORKSPACE
 node /root/dist/index.js

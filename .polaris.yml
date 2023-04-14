@@ -13,18 +13,22 @@ capture:
         - directory: ${project.projectDir}
         - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     ruby:
+      extensions: [rb]
       files:
         - directory: ${project.projectDir}
         - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     python:
+      extensions: [py]
       files:
         - directory: ${project.projectDir}
         - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     php:
+      extensions: [php]
       files:
         - directory: ${project.projectDir}
         - excludeRegex: node_modules|bower_components|vendor|test|spec|.git
     java:
+      extensions: [java]
       files:
         - directory: ${project.projectDir}
         - excludeRegex: node_modules|bower_components|vendor|test|spec|.git

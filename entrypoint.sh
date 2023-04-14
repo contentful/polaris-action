@@ -5,7 +5,7 @@ echo $(ls)
 
 cd $GITHUB_WORKSPACE
 
-if [ !-f polaris.yml ]; then
+if [ ! -f polaris.yml ]; then
     echo "polaris.yml not found!"
     mv /root/.polaris.yml polaris.yml
 fi

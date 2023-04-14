@@ -62034,7 +62034,8 @@ function run() {
             if (isIncremental) {
                 const resultsGlobber = __nccwpck_require__(3664);
                 const resultsJson = yield resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
-                if (!resultsJson) {
+                console.log(resultsJson);
+                if (!resultsJson || (resultsJson === null || resultsJson === void 0 ? void 0 : resultsJson.length) == 0) {
                     utils_1.logger.error(`Unable to find Polaris run results.`);
                     polarisPolicyCheck === null || polarisPolicyCheck === void 0 ? void 0 : polarisPolicyCheck.cancelCheck();
                     process.exit(2);

@@ -43,5 +43,5 @@ analyze:
     usebudaforjavadotnet: disable
 install:
   coverity:
-    version: 2023.3.1
+    version: default
 serverUrl: https://contentful.polaris.synopsys.com

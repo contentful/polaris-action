@@ -3,7 +3,7 @@ FROM node:slim
 
 ARG POLARIS_SERVER_URL
 ARG POLARIS_ACCESS_TOKEN
-ARG POLARIS_VERSION="2023.6.0"
+ARG POLARIS_VERSION="2023.9.0"
 
 ENV INSTALL_DIR /tmp
 ENV PATH "$INSTALL_DIR/bin:$PATH"
@@ -28,7 +28,7 @@ COPY entrypoint.sh .
 COPY .polaris.yml .
 
 # deletes temp token
-RUN rm .synopsys/polaris/.api_token.txt 
+# RUN rm .synopsys/polaris/.api_token.txt 
 
 ENTRYPOINT ["/root/entrypoint.sh"]
 # ENTRYPOINT ["/bin/bash"]

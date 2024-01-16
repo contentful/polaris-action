@@ -1,1 +1,4 @@
 * @contentful/team-security
+package.json
+package-lock.json
+.github/workflows

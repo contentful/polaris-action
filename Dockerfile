@@ -28,7 +28,7 @@ COPY entrypoint.sh .
 COPY .polaris.yml .
 
 # deletes temp token
-RUN rm .synopsys/polaris/.api_token.txt 
+# RUN rm .synopsys/polaris/.api_token.txt 
 
 ENTRYPOINT ["/root/entrypoint.sh"]
 # ENTRYPOINT ["/bin/bash"]

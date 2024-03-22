@@ -8,6 +8,8 @@ on:
     branches:
       - "*"
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 */10 * *'  
 
 env:
   REGISTRY: ghcr.io

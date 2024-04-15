@@ -1,6 +1,8 @@
 name: Create and publish a Docker image
 
 on:
+  schedule:
+    - cron: 0 0 */2 * *
   release:
     types: [published]
   # publish on pushes to the main branch (image tagged as "latest")
@@ -8,8 +10,6 @@ on:
     branches:
       - "*"
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 */10 * *'  
 
 env:
   REGISTRY: ghcr.io

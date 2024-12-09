@@ -1,6 +1,6 @@
 #!/bin/sh -l
 export PATH="/tmp/bin:$PATH"
-export POLARIS_HOME=/root/.synopsys/polaris
+export POLARIS_HOME=/root/.blackduck/polaris
 echo $(ls)
 
 cd $GITHUB_WORKSPACE

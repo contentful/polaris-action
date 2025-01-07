@@ -1,4 +1,4 @@
 * @contentful/team-security
-package.json
-package-lock.json
+package.json @app/renovate-approve
+package-lock.json @app/renovate-approve
 .github/workflows

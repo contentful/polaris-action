@@ -167,7 +167,7 @@ async function run(): Promise<void> {
 
     if (SKIP_RUN) {
       polaris_run_result = {
-        scan_cli_json_path: ".synopsys/polaris/cli-scan.json",
+        scan_cli_json_path: ".blackduck/polaris/cli-scan.json",
         return_code: 0
       }
     } else {
@@ -236,7 +236,7 @@ async function run(): Promise<void> {
 
     if (isIncremental) {
       const resultsGlobber = require('fast-glob');
-      const resultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
+      const resultsJson = await resultsGlobber([`.blackduck/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
 
       if (!resultsJson || resultsJson?.length == 0) {
         logger.error(`Unable to find Polaris run results.`)
@@ -245,7 +245,7 @@ async function run(): Promise<void> {
 
       logger.debug(`Incremental results in ${resultsJson[0]}`)
 
-      const newResultsJson = await resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
+      const newResultsJson = await resultsGlobber([`.blackduck/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
       let newResultsContent, newResults, jsonV7Content, coverityIssues;
       if (newResultsJson[0]) {
         newResultsContent = await fs.readFile(newResultsJson[0])

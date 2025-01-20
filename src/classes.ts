@@ -212,7 +212,7 @@ export class ChangeSetEnvironment {
     }
 
     set_default_file_path(cwd: string) {
-        this.env["CHANGE_SET_FILE_PATH"] = path.join(cwd, ".synopsys", "polaris", "changeSetFile.txt");
+        this.env["CHANGE_SET_FILE_PATH"] = path.join(cwd, ".blackduck", "polaris", "changeSetFile.txt");
     }
 
     get_file_path(): string {
@@ -384,7 +384,7 @@ export class PolarisRunner {
             build_command.split(' '),
             { ignoreReturnCode: true })
 
-        var synopsysFolder = path.join(cwd, ".synopsys");
+        var synopsysFolder = path.join(cwd, ".blackduck");
         var polarisFolder = path.join(synopsysFolder, "polaris");
         var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
 

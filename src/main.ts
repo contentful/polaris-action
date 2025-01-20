@@ -216,7 +216,8 @@ async function run(): Promise<void> {
           // Ignore, we will calculate issues separately
           logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
         } catch (error) {
-          logger.error(`Cant read polaris issues `)
+          console.log(error)
+          logger.error(`Cannot read polaris issues `)
           polarisPolicyCheck?.cancelCheck()
           process.exit(2)
         }

@@ -61496,7 +61496,7 @@ class ChangeSetEnvironment {
         }
     }
     set_default_file_path(cwd) {
-        this.env["CHANGE_SET_FILE_PATH"] = path.join(cwd, ".synopsys", "polaris", "changeSetFile.txt");
+        this.env["CHANGE_SET_FILE_PATH"] = path.join(cwd, ".blackduck", "polaris", "changeSetFile.txt");
     }
     get_file_path() {
         return this.env["CHANGE_SET_FILE_PATH"];
@@ -61658,7 +61658,7 @@ class PolarisRunner {
             }
             utils_1.logger.info(`Executing ${polaris_install.polaris_executable} with line=${build_command}`);
             var return_code = yield (0, exec_1.exec)(polaris_install.polaris_executable, build_command.split(' '), { ignoreReturnCode: true });
-            var synopsysFolder = path.join(cwd, ".synopsys");
+            var synopsysFolder = path.join(cwd, ".blackduck");
             var polarisFolder = path.join(synopsysFolder, "polaris");
             var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
             return new PolarisRunResult(return_code, scanJsonFile);
@@ -62027,7 +62027,7 @@ function run() {
             let polaris_run_result = undefined;
             if (inputs_1.SKIP_RUN) {
                 polaris_run_result = {
-                    scan_cli_json_path: ".synopsys/polaris/cli-scan.json",
+                    scan_cli_json_path: ".blackduck/polaris/cli-scan.json",
                     return_code: 0
                 };
             }
@@ -62096,13 +62096,13 @@ function run() {
             let issuesUnified = undefined;
             if (isIncremental) {
                 const resultsGlobber = __nccwpck_require__(3664);
-                const resultsJson = yield resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
+                const resultsJson = yield resultsGlobber([`.blackduck/polaris/data/coverity/*/idir/incremental-results/incremental-results.json`]);
                 if (!resultsJson || (resultsJson === null || resultsJson === void 0 ? void 0 : resultsJson.length) == 0) {
                     utils_1.logger.error(`Unable to find Polaris run results.`);
                     polarisPolicyCheck === null || polarisPolicyCheck === void 0 ? void 0 : polarisPolicyCheck.cancelCheck();
                 }
                 utils_1.logger.debug(`Incremental results in ${resultsJson[0]}`);
-                const newResultsJson = yield resultsGlobber([`.synopsys/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
+                const newResultsJson = yield resultsGlobber([`.blackduck/polaris/data/coverity/*/idir/incremental-results/new-issues.json`]);
                 let newResultsContent, newResults, jsonV7Content, coverityIssues;
                 if (newResultsJson[0]) {
                     newResultsContent = yield fs_1.promises.readFile(newResultsJson[0]);

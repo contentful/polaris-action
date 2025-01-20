@@ -455,6 +455,7 @@ export class PolarisJobService {
     async waitForJobsToEnd(status_job_urls: string[]) {
         var self = this;
         await asyncForEach(status_job_urls, async function (job: string) {
+            console.log(job)
             await self.waitForJobToEnd(job);
             await self.checkJobSuccess(job);
         });

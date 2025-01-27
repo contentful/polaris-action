@@ -49,7 +49,6 @@ jobs:
 ```
 
 ## Development
-
 Make changes in `src` folder
 Run `npm run package` to create dist files
 To run incremental scan: `export POLARIS_FF_ENABLE_COVERITY_INCREMENTAL=true`

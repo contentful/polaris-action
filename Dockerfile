@@ -7,6 +7,7 @@ ARG POLARIS_VERSION="2024.12.0"
 
 ENV INSTALL_DIR /tmp
 ENV PATH "$INSTALL_DIR/bin:$PATH"
+ENV SSL_CERT_FILE=/usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt
 # ENV POLARIS_HOME=/root/polaris
 
 RUN apt-get update \
@@ -19,14 +20,18 @@ RUN curl -o /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt http://cert.
     # Verify certificate was installed
     ls -la /etc/ssl/certs | grep Entrust
 
+RUN mkdir -p /etc/pki/ca-trust/source/anchors/ && \
+    curl -o /etc/pki/ca-trust/source/anchors/Entrust-OVTLS-I-R1.crt http://cert.ssl.com/Entrust-OVTLS-I-R1.cer && \
+    update-ca-trust
+
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /root
 
-RUN curl -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris_cli-linux64-${POLARIS_VERSION}.zip \
+RUN curl --cacert /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt -o polaris_cli-linux64.zip -fsLOS $POLARIS_SERVER_URL/api/tools/polaris_cli-linux64-${POLARIS_VERSION}.zip \
     && unzip -j polaris_cli-linux64.zip -d $INSTALL_DIR/bin
 
-RUN polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
+RUN CURL_CA_BUNDLE=/usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt polaris --co analyze.mode=local --co capture.build.coverity.cov-build="[--desktop]" install
 
 # copy app code
 COPY ./dist ./dist

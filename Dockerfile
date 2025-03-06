@@ -12,6 +12,12 @@ ENV PATH "$INSTALL_DIR/bin:$PATH"
 RUN apt-get update \
     && apt-get install -y curl ca-certificates unzip git jq bash openssl golang-go
 
+# Install certificates properly
+RUN curl -o /usr/local/share/ca-certificates/entrust.cer http://cert.ssl.com/Entrust-OVTLS-I-R1.cer && \
+    openssl x509 -inform DER -in /usr/local/share/ca-certificates/entrust.cer -out /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt && \
+    chmod 644 /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt && \
+    update-ca-certificates
+
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /root

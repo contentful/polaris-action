@@ -16,13 +16,7 @@ RUN apt-get update \
 # Install certificates properly
 RUN curl -o /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt http://cert.ssl.com/Entrust-OVTLS-I-R1.cer && \
     chmod 644 /usr/local/share/ca-certificates/Entrust-OVTLS-I-R1.crt && \
-    update-ca-certificates && \
-    # Verify certificate was installed
-    ls -la /etc/ssl/certs | grep Entrust
-
-RUN mkdir -p /etc/pki/ca-trust/source/anchors/ && \
-    curl -o /etc/pki/ca-trust/source/anchors/Entrust-OVTLS-I-R1.crt http://cert.ssl.com/Entrust-OVTLS-I-R1.cer && \
-    update-ca-trust
+    update-ca-certificates
 
 SHELL ["/bin/bash", "-c"]
 

@@ -314,6 +314,11 @@ async function run(): Promise<void> {
             }
         }
     } else {
+      if (!(await fs.stat(polaris_run_result.scan_cli_json_path).catch(() => false))) {
+        logger.warn(`Polaris scan file not found at ${polaris_run_result.scan_cli_json_path}. Skipping issue processing.`);
+        polarisPolicyCheck?.cancelCheck();
+        return;
+      }
       var scan_json_text = await fs.readFile(polaris_run_result.scan_cli_json_path);
       var scan_json = JSON.parse(scan_json_text.toString());
       const json_path = require('jsonpath');

@@ -212,7 +212,11 @@ async function run(): Promise<void> {
         var polaris_waiter = new PolarisIssueWaiter(logger);
         var issue_count;
         try {
+          const scanPath = polaris_run_result.scan_cli_json_path;
+          const scanFileExists = await fs.stat(scanPath).then(() => true).catch(() => false);
+          if (scanFileExists){
           issue_count = await polaris_waiter.wait_for_issues(polaris_run_result.scan_cli_json_path, polaris_service);
+          } else issue_count = 0;
           // Ignore, we will calculate issues separately
           logger.error(`Polaris Software Integrity Platform found ${issue_count} total issues.`)
         } catch (error) {

@@ -408,6 +408,10 @@ export class PolarisIssueWaiter {
     }
 
     async wait_for_issues(scan_cli_json_path: String, polaris_service: PolarisService): Promise<number | null> {
+        if (!fs.existsSync(scan_cli_json_path)) {
+            this.log.warn(`Scan result file not found at: ${scan_cli_json_path}. Skipping issue processing.`);
+            return null;
+        }
         var scan_json_text = fs.readFileSync(scan_cli_json_path);
         var scan_json = JSON.parse(scan_json_text);
 

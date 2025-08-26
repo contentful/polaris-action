@@ -384,8 +384,8 @@ export class PolarisRunner {
             build_command.split(' '),
             { ignoreReturnCode: true })
 
-        var synopsysFolder = path.join(cwd, ".blackduck");
-        var polarisFolder = path.join(synopsysFolder, "polaris");
+        var blackduckFolder = path.join(cwd, ".blackduck");
+        var polarisFolder = path.join(blackduckFolder, "polaris");
         var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
 
         return new PolarisRunResult(return_code, scanJsonFile);

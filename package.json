@@ -26,7 +26,7 @@
     "url": "git+https://github.com/contentful/polaris-action.git"
   },
   "keywords": [],
-  "author": "Synopsys Inc.",
+  "author": "Blackduck Inc.",
   "license": "Apache 2.0",
   "bugs": {
     "url": "https://github.com/contentful/polaris-action/issues"

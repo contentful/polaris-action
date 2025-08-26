@@ -309,7 +309,7 @@ export function readSecurityGateFiltersFromString(securityGateString: string): t
     return (securityGateMap)
 }
 
-export const POLARIS_COMMENT_PREFACE = '<!-- Comment managed by Synopsys Polaris, do not modify!'
+export const POLARIS_COMMENT_PREFACE = '<!-- Comment managed by Blackduck Polaris, do not modify!'
 const POLARIS_PRESENT = 'PRESENT'
 
 export function polarisCreateReviewCommentMessage(issue: IPolarisIssueUnified, reportUrl: string): string {

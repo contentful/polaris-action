@@ -64042,8 +64042,8 @@ class PolarisRunner {
             }
             utils_1.logger.info(`Executing ${polaris_install.polaris_executable} with line=${build_command}`);
             var return_code = yield (0, exec_1.exec)(polaris_install.polaris_executable, build_command.split(' '), { ignoreReturnCode: true });
-            var synopsysFolder = path.join(cwd, ".blackduck");
-            var polarisFolder = path.join(synopsysFolder, "polaris");
+            var blackduckFolder = path.join(cwd, ".blackduck");
+            var polarisFolder = path.join(blackduckFolder, "polaris");
             var scanJsonFile = path.join(polarisFolder, "cli-scan.json");
             return new PolarisRunResult(return_code, scanJsonFile);
         });
@@ -64996,7 +64996,7 @@ function readSecurityGateFiltersFromString(securityGateString) {
     return (securityGateMap);
 }
 exports.readSecurityGateFiltersFromString = readSecurityGateFiltersFromString;
-exports.POLARIS_COMMENT_PREFACE = '<!-- Comment managed by Synopsys Polaris, do not modify!';
+exports.POLARIS_COMMENT_PREFACE = '<!-- Comment managed by Blackduck Polaris, do not modify!';
 const POLARIS_PRESENT = 'PRESENT';
 function polarisCreateReviewCommentMessage(issue, reportUrl) {
     const CHECKRUN_URL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;

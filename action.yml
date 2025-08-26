@@ -1,6 +1,5 @@
-name: "Synopsys Polaris Security Testing"
+name: "Blackduck Polaris Security Testing"
 description: "Run Coverity SAST via the Polaris platform and provide feedback within GitHub pull requests"
-author: "Synopsys Inc"
 inputs:
   github_token:
     description: "Your GitHub token"

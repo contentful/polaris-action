@@ -33,7 +33,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Synopsys Polaris
+      - name: Blackduck Polaris
         uses: contentful/polaris-action@master
         if: github.actor != 'dependabot[bot]' || github.actor != 'dependabot-preview[bot]'
         with:
